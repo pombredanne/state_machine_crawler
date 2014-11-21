@@ -1,4 +1,4 @@
-1.0.1
+1.0.1 2014-11-21
 
     [Anton Berezin <gurunars@gmail.com>]
         * PATCH: Added one extra test and fixed a bug with not being to do a transition through the initial state

@@ -1,6 +1,6 @@
 from setuptools import setup
 
-SOURCE_VERSION = "1.0.0"
+SOURCE_VERSION = "1.0.1"
 
 
 setup(
