@@ -8,6 +8,7 @@ class StateMachineCrawlerError(Exception):
 
 
 class Transition(object):
+    """ Represents a transformation of the system from one state into another """
     __metaclass__ = ABCMeta
     cost = 1
     target_state = source_state = None
@@ -61,6 +62,7 @@ class State(object):
 
 
 def _get_cost(states):
+    """ Returns a cumulative cost of the whole chain of transformations """
     cost = 0
     cursor = states[0]
     for state in states[1:]:
@@ -101,6 +103,7 @@ def _create_transition_map(state, state_map=None):
 
 
 class StateMachineCrawler(object):
+    """ The crawler responsible for orchestrating the transitions of system's states """
 
     def __init__(self, system, initial_transition):
         self._system = system
@@ -115,10 +118,12 @@ class StateMachineCrawler(object):
         return self._current_state
 
     def start(self):
+        """ Makes the initial transition to start the state machine """
         self._initial_transition(self._system).move()
         self._current_state = self._initial_transition.target_state
 
     def move(self, state):
+        """ Attempts to make a move to another state """
         if self._current_state is None:
             raise StateMachineCrawlerError("StateMachineCrawler was not started")
         if self._current_state == state:
