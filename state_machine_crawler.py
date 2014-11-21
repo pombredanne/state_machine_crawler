@@ -1,5 +1,4 @@
 from inspect import isclass
-from collections import defaultdict
 from abc import ABCMeta, abstractmethod
 
 
@@ -93,9 +92,10 @@ def _find_shortest_path(graph, start, end, path=[]):
 
 def _create_transition_map(state, state_map=None):
     """ Returns a graph for state transitioning """
-    state_map = state_map or defaultdict(set)
+    state_map = state_map or {}
     if state in state_map:
         return state_map
+    state_map[state] = set()
     for next_state in state.transition_map.keys():
         state_map[state].add(next_state)
         _create_transition_map(next_state, state_map)
@@ -106,12 +106,29 @@ class StateMachineCrawler(object):
     """ The crawler responsible for orchestrating the transitions of system's states """
 
     def __init__(self, system, initial_transition):
+        """
+        @system: system under testing. All transition shall change its state.
+        @initial_transition: a special transformation that configures the system to a blank state.
+                             Note: it must be possible to perform the transition at any point. I.e. all the states
+                             should be transitionable to the initial state. It might me the most expensive
+                             transition in the system.
+        """
         self._system = system
         self._current_state = None
         self._initial_transition = initial_transition
-        if initial_transition.target_state is None:
+        self._state_graph = self._init_state_graph()
+
+    def _init_state_graph(self):
+        initial_state = self._initial_transition.target_state
+        if initial_state is None:
             raise StateMachineCrawlerError("Initial transition has no target state")
-        self._state_graph = _create_transition_map(initial_transition.target_state)
+        state_graph = _create_transition_map(initial_state)
+        for source_state, target_states in state_graph.iteritems():
+            target_states.add(initial_state)
+            if source_state == initial_state:
+                continue
+            source_state.transition_map[initial_state] = self._initial_transition
+        return state_graph
 
     @property
     def state(self):

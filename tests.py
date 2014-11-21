@@ -51,16 +51,16 @@ class StateFour(State):
     from_v2 = NonUniqueTransition.link(source_state=StateThreeVariantTwo)
 
 
-class TestStateMachine(unittest.TestCase):
+class BaseFunctionsTest(unittest.TestCase):
 
     def test_create_transition_map(self):
-
         self.assertEqual(_create_transition_map(InitialState), {
             InitialState: {StateOne},
             StateOne: {StateTwo},
             StateTwo: {StateThreeVariantOne, StateThreeVariantTwo},
             StateThreeVariantOne: {StateFour},
-            StateThreeVariantTwo: {StateFour}
+            StateThreeVariantTwo: {StateFour},
+            StateFour: set()
         })
 
     def test_find_shortest_path(self):
@@ -68,23 +68,32 @@ class TestStateMachine(unittest.TestCase):
         shortest_path = _find_shortest_path(graph, InitialState, StateFour)
         self.assertEqual(shortest_path, [InitialState, StateOne, StateTwo, StateThreeVariantTwo, StateFour])
 
+
+class TestStateMachine(unittest.TestCase):
+
+    def setUp(self):
+        self.target = mock.Mock()
+        self.smc = StateMachineCrawler(self.target, EnterTransition.link(InitialState))
+
     def test_move(self):
-        target = mock.Mock()
-        smc = StateMachineCrawler(target, EnterTransition.link(InitialState))
-        smc.start()
-        smc.move(StateFour)
-        self.assertEqual(target.enter.call_count, 1)
-        self.assertEqual(target.unique.call_count, 3)
-        self.assertEqual(target.non_unique.call_count, 1)
+        self.smc.start()
+        self.smc.move(StateFour)
+        self.assertEqual(self.target.enter.call_count, 1)
+        self.assertEqual(self.target.unique.call_count, 3)
+        self.assertEqual(self.target.non_unique.call_count, 1)
 
     def test_sequential_moves(self):
-        target = mock.Mock()
-        smc = StateMachineCrawler(target, EnterTransition.link(InitialState))
-        smc.start()
-        self.assertIs(smc.state, InitialState)
-        smc.move(StateOne)
-        self.assertIs(smc.state, StateOne)
-        smc.move(StateTwo)
-        self.assertIs(smc.state, StateTwo)
-        smc.move(StateFour)
-        self.assertIs(smc.state, StateFour)
+        self.smc.start()
+        self.assertIs(self.smc.state, InitialState)
+        self.smc.move(StateOne)
+        self.assertIs(self.smc.state, StateOne)
+        self.smc.move(StateTwo)
+        self.assertIs(self.smc.state, StateTwo)
+        self.smc.move(StateFour)
+        self.assertIs(self.smc.state, StateFour)
+
+    def test_move_through_initial_state(self):
+        self.smc.start()
+        self.smc.move(StateFour)
+        self.smc.move(StateTwo)
+        self.assertIs(self.smc.state, StateTwo)
