@@ -2,7 +2,8 @@ import unittest
 
 import mock
 
-from state_machine_crawler import State, StateMachineCrawler, Transition, _create_transition_map, _find_shortest_path
+from state_machine_crawler import State, StateMachineCrawler, Transition, _create_transition_map, _find_shortest_path, \
+    StateMachineCrawlerError
 
 
 class EnterTransition(Transition):
@@ -24,6 +25,10 @@ class NonUniqueTransition(Transition):
 
 
 class InitialState(State):
+    pass
+
+
+class UnknownState(State):
     pass
 
 
@@ -97,3 +102,13 @@ class TestStateMachine(unittest.TestCase):
         self.smc.move(StateFour)
         self.smc.move(StateTwo)
         self.assertIs(self.smc.state, StateTwo)
+
+    def test_unknown_state(self):
+        self.smc.start()
+        self.assertRaises(StateMachineCrawlerError, self.smc.move, UnknownState)
+
+    def test_transition_without_start(self):
+        self.assertRaises(StateMachineCrawlerError, self.smc.move, StateOne)
+
+    def test_undefined_initial_state(self):
+        self.assertRaises(StateMachineCrawlerError, StateMachineCrawler, self.target, EnterTransition)

@@ -2,6 +2,7 @@
 
     [Anton Berezin <gurunars@gmail.com>]
         * PATCH: Added one extra test and fixed a bug with not being to do a transition through the initial state
+        * PATCH: wrote a new unit test and fixed a bug with transitioning to unknown state
 
 1.0.0 2014-11-12
 

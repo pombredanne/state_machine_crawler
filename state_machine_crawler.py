@@ -148,7 +148,10 @@ class StateMachineCrawler(object):
         if state == self._initial_transition.target_state:
             self.start()
             return
-        for next_state in _find_shortest_path(self._state_graph, self._current_state, state)[1:]:
+        shortest_path = _find_shortest_path(self._state_graph, self._current_state, state)
+        if shortest_path is None:
+            raise StateMachineCrawlerError("There is no way to achieve state %r" % state)
+        for next_state in shortest_path[1:]:
             transition = self._current_state.transition_map[next_state]
             try:
                 transition(self._system).move()
