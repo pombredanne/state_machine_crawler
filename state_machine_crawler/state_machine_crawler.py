@@ -60,6 +60,23 @@ class State(object):
     __metaclass__ = StateMetaClass
 
 
+class ErrorState(State):
+    """ Represents a state of the system when it behaves abnormally """
+
+
+class ErrorTransition(Transition):
+    """ Base class for managing a tranition of the system into the ErrorState. All error logging should be done here """
+    target_state = ErrorState
+
+    def __init__(self, system, error):
+        super(ErrorTransition, self).__init__(system)
+        self._error = error
+
+    @abstractmethod
+    def move(self):
+        pass
+
+
 def _get_cost(states):
     """ Returns a cumulative cost of the whole chain of transformations """
     cost = 0
@@ -105,17 +122,20 @@ def _create_transition_map(state, state_map=None):
 class StateMachineCrawler(object):
     """ The crawler responsible for orchestrating the transitions of system's states """
 
-    def __init__(self, system, initial_transition):
+    def __init__(self, system, initial_transition, error_handling_transition):
         """
         @system: system under testing. All transition shall change its state.
         @initial_transition: a special transformation that configures the system to a blank state.
                              Note: it must be possible to perform the transition at any point. I.e. all the states
                              should be transitionable to the initial state. It might me the most expensive
                              transition in the system.
+        @error_handling_transition: subclass of ErrorTransition
         """
         self._system = system
         self._current_state = None
         self._initial_transition = initial_transition
+        self._initial_state = initial_transition.target_state
+        self._error_handling_transition = error_handling_transition
         self._state_graph = self._init_state_graph()
 
     def _init_state_graph(self):
@@ -134,20 +154,15 @@ class StateMachineCrawler(object):
     def state(self):
         return self._current_state
 
-    def start(self):
-        """ Makes the initial transition to start the state machine """
-        self._initial_transition(self._system).move()
-        self._current_state = self._initial_transition.target_state
-
     def move(self, state):
         """ Attempts to make a move to another state """
-        if self._current_state is None:
-            raise StateMachineCrawlerError("StateMachineCrawler was not started")
-        if self._current_state == state:
+        if state is self._current_state:
             return
-        if state == self._initial_transition.target_state:
-            self.start()
-            return
+        if state is self._initial_state or self._current_state is None:
+            self._initial_transition(self._system).move()
+            self._current_state = self._initial_state
+            if state is self._initial_state:
+                return
         shortest_path = _find_shortest_path(self._state_graph, self._current_state, state)
         if shortest_path is None:
             raise StateMachineCrawlerError("There is no way to achieve state %r" % state)
@@ -156,6 +171,7 @@ class StateMachineCrawler(object):
             try:
                 transition(self._system).move()
                 self._current_state = next_state
-            except Exception, e:
-                raise StateMachineCrawlerError(str(e))
-                self.start()
+            except Exception, error:
+                error_transition = self._error_handling_transition(self._system, error)
+                error_transition.move()
+                self.move(self._initial_state)
