@@ -1,9 +1,4 @@
-1.0.3
-
-    [Anton Berezin <gurunars@gmail.com>]
-        * FILLME
-
-1.0.2 2014-11-24
+1.0.3 2014-11-24
 
     [Anton Berezin <gurunars@gmail.com>]
         * Version bump to enable Travis CI build
