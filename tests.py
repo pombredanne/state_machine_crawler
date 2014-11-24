@@ -2,7 +2,8 @@ import unittest
 
 import mock
 
-from state_machine_crawler import State, StateMachineCrawler, Transition, StateMachineCrawlerError, ErrorTransition
+from state_machine_crawler import State, StateMachineCrawler, Transition, StateMachineCrawlerError, ErrorTransition, \
+    InitialTransition, InitialState
 from state_machine_crawler.state_machine_crawler import _create_transition_map, _find_shortest_path
 
 
@@ -12,7 +13,7 @@ class CustomErrorTransition(ErrorTransition):
         self._system.error()
 
 
-class EnterTransition(Transition):
+class EnterTransition(InitialTransition):
 
     def move(self):
         self._system.enter()
@@ -28,10 +29,6 @@ class NonUniqueTransition(Transition):
 
     def move(self):
         self._system.non_unique()
-
-
-class InitialState(State):
-    pass
 
 
 class UnknownState(State):
@@ -111,12 +108,16 @@ class TestStateMachine(unittest.TestCase):
     def test_unknown_state(self):
         self.assertRaises(StateMachineCrawlerError, self.smc.move, UnknownState)
 
-    def test_undefined_initial_state(self):
-        self.assertRaises(StateMachineCrawlerError, StateMachineCrawler, self.target, EnterTransition,
-                          CustomErrorTransition)
-
     def test_error_transition(self):
         self.target.unique.side_effect = Exception("Woooooo!")
         self.smc.move(StateTwo)
         self.assertIs(self.smc.state, InitialState)
         self.assertEqual(self.target.error.call_count, 1)
+
+    def test_wrong_initial_state_transition(self):
+        self.assertRaisesRegexp(StateMachineCrawlerError, "initial_transition must be InitialTransition subclass",
+                                StateMachineCrawler, None, UniqueTransition, ErrorTransition)
+
+    def test_wrong_error_state_transition(self):
+        self.assertRaisesRegexp(StateMachineCrawlerError, "error_transition must be ErrorTransition subclass",
+                                StateMachineCrawler, None, EnterTransition, UniqueTransition)

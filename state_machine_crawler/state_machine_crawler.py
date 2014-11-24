@@ -64,13 +64,37 @@ class ErrorState(State):
     """ Represents a state of the system when it behaves abnormally """
 
 
+class InitialState(State):
+    """ Represents the initial state of the system """
+
+
 class ErrorTransition(Transition):
-    """ Base class for managing a tranition of the system into the ErrorState. All error logging should be done here """
+    """ Base class for managing a tranition of the system into the ErrorState. All error logging should be done here.
+
+    Exception is available as *_error* instance attribute.
+
+    ErrorState class is built-in - there is no need to define your own
+    """
     target_state = ErrorState
 
     def __init__(self, system, error):
         super(ErrorTransition, self).__init__(system)
         self._error = error
+
+    @abstractmethod
+    def move(self):
+        pass
+
+
+class InitialTransition(Transition):
+    """ A special transformation that configures the system to a blank state.
+
+    It must be possible to perform the transition at any point. I.e. all the states should be transitionable to
+    the initial state. It might me the most expensive transition in the system.
+
+    InitialState class is built-in - there is no need to define your own
+    """
+    target_state = InitialState
 
     @abstractmethod
     def move(self):
@@ -122,20 +146,21 @@ def _create_transition_map(state, state_map=None):
 class StateMachineCrawler(object):
     """ The crawler responsible for orchestrating the transitions of system's states """
 
-    def __init__(self, system, initial_transition, error_handling_transition):
+    def __init__(self, system, initial_transition, error_transition):
         """
         @system: system under testing. All transition shall change its state.
-        @initial_transition: a special transformation that configures the system to a blank state.
-                             Note: it must be possible to perform the transition at any point. I.e. all the states
-                             should be transitionable to the initial state. It might me the most expensive
-                             transition in the system.
-        @error_handling_transition: subclass of ErrorTransition
+        @initial_transition: subclass of InitialTransition
+        @error_transition: subclass of ErrorTransition
         """
         self._system = system
         self._current_state = None
+        if not (isclass(initial_transition) and issubclass(initial_transition, InitialTransition)):
+            raise StateMachineCrawlerError("initial_transition must be InitialTransition subclass")
+        if not (isclass(error_transition) and issubclass(error_transition, ErrorTransition)):
+            raise StateMachineCrawlerError("error_transition must be ErrorTransition subclass")
         self._initial_transition = initial_transition
         self._initial_state = initial_transition.target_state
-        self._error_handling_transition = error_handling_transition
+        self._error_transition = error_transition
         self._state_graph = self._init_state_graph()
 
     def _init_state_graph(self):
@@ -173,7 +198,6 @@ class StateMachineCrawler(object):
                 transition(self._system).move()
                 self._current_state = next_state
             except Exception, error:
-                error_transition = self._error_handling_transition(self._system, error)
-                error_transition.move()
+                self._error_transition(self._system, error).move()
                 self.move(self._initial_state)
                 break
