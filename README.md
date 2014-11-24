@@ -2,7 +2,7 @@
 
 A library for following automata based programming model.
 
-Check documentation for more details.
+Check [documentation](http://state-machine-crawler.readthedocs.org/en/latest/) for more details.
 
 # The process
 
