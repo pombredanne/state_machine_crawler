@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 SOURCE_VERSION = "1.0.3"
 
@@ -6,7 +6,7 @@ SOURCE_VERSION = "1.0.3"
 setup(
     name="state-machine-crawler",
     version=SOURCE_VERSION,
-    py_modules=["state_machine_crawler"],
+    packages=find_packages(),
     author="Anton Berezin",
     author_email="gurunars@gmail.com"
 )

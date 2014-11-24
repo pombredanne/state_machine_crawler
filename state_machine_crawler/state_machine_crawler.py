@@ -157,5 +157,5 @@ class StateMachineCrawler(object):
                 transition(self._system).move()
                 self._current_state = next_state
             except Exception, e:
-                raise StateMachineCrawlerError(e.message)
+                raise StateMachineCrawlerError(str(e))
                 self.start()

@@ -2,8 +2,8 @@ import unittest
 
 import mock
 
-from state_machine_crawler import State, StateMachineCrawler, Transition, _create_transition_map, _find_shortest_path, \
-    StateMachineCrawlerError
+from state_machine_crawler import State, StateMachineCrawler, Transition, StateMachineCrawlerError
+from state_machine_crawler.state_machine_crawler import _create_transition_map, _find_shortest_path
 
 
 class EnterTransition(Transition):
