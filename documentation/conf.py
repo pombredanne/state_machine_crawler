@@ -25,7 +25,7 @@ master_doc = 'index'
 project = u'State Machine Crawler'
 copyright = u'2014, Anton Berezin'
 
-version = '1.0.3'
+version = '2.0.0'
 release = version
 exclude_patterns = ['_build']
 pygments_style = 'sphinx'

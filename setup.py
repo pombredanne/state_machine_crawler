@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-SOURCE_VERSION = "1.0.3"
+SOURCE_VERSION = "2.0.0"
 
 
 setup(
