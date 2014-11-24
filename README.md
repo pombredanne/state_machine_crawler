@@ -1,3 +1,11 @@
+# State machine crawler
+
+A library for following automata based programming model.
+
+Check documentation for more details.
+
+# The process
+
 ## Code style
 
 Run [pep8](https://pypi.python.org/pypi/pep8) and [pyflakes](https://pypi.python.org/pypi/pyflakes) in **src** directory
