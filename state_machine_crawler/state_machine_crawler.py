@@ -166,6 +166,7 @@ class StateMachineCrawler(object):
         shortest_path = _find_shortest_path(self._state_graph, self._current_state, state)
         if shortest_path is None:
             raise StateMachineCrawlerError("There is no way to achieve state %r" % state)
+        print shortest_path
         for next_state in shortest_path[1:]:
             transition = self._current_state.transition_map[next_state]
             try:
@@ -175,3 +176,4 @@ class StateMachineCrawler(object):
                 error_transition = self._error_handling_transition(self._system, error)
                 error_transition.move()
                 self.move(self._initial_state)
+                break

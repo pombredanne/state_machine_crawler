@@ -115,10 +115,8 @@ class TestStateMachine(unittest.TestCase):
         self.assertRaises(StateMachineCrawlerError, StateMachineCrawler, self.target, EnterTransition,
                           CustomErrorTransition)
 
-    # def test_error_transition(self):
-    #     self.target.unique.side_effect = Exception("Woooooo!")
-    #     self.smc.start()
-    #     print self.smc._current_state
-    #     self.smc.move(StateTwo)
-    #     self.assertIs(self.smc.state, InitialState)
-    #     self.assertEqual(self.target.error.call_count, 1)
+    def test_error_transition(self):
+        self.target.unique.side_effect = Exception("Woooooo!")
+        self.smc.move(StateTwo)
+        self.assertIs(self.smc.state, InitialState)
+        self.assertEqual(self.target.error.call_count, 1)
