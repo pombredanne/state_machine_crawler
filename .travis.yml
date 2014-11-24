@@ -6,6 +6,6 @@ deploy:
   provider: pypi
   user: gurunars
   on:
-    tags: true
+    branch: master
   password:
     secure: VOlpaICOkhyxiMUOctf8SV3jXIcv4cBHchxrk0ylXAKcw5HU1x0zgsA/5C46KKgtRZzgHie56VnKZ+G8wYz9rYEEfqJIHyy6lUqS9UXF3tmpHk3jbWMgdEYg6J3sdx5/coWmkVs1uGExoUpN5WEJllUrgSlbbaVwu76cKs/alQc=
