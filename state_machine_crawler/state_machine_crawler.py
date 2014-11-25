@@ -2,12 +2,23 @@ from inspect import isclass
 from abc import ABCMeta, abstractmethod
 
 
-class StateMachineCrawlerError(Exception):
-    """ Error to be raised when:
+class StateMachineError(Exception):
+    """ Base error to be raise by the toolkit """
 
-    - there are issues with initialization of the state state machine
-    - it is impossible to perform state transition because the state is unreachable
+
+class TransitionError(StateMachineError):
+    """ Raised if transition to failed.
+
+    Failure could happen because:
+    - target state is not reachable
+    - state verification failed
+
+    NOTE: if transition itself fails - the exception is raised as is because most probably it is a source code issue
     """
+
+
+class DeclarationError(StateMachineError):
+    """ Raised if something is wrong with the state machine in general """
 
 
 class Transition(object):
@@ -60,7 +71,7 @@ class Transition(object):
         return NewTransition
 
 
-class StateMetaClass(type):
+class StateMetaClass(ABCMeta):
 
     def __init__(self, name, bases, attrs):
         super(StateMetaClass, self).__init__(name, bases, attrs)
@@ -81,53 +92,19 @@ class StateMetaClass(type):
                     source_state = None
                 attr.source_state.transition_map[self] = RelatedTransition
             else:
-                raise StateMachineCrawlerError("No target nor source state is defined for %r" % attr)
+                raise DeclarationError("No target nor source state is defined for %r" % attr)
 
 
 class State(object):
     """ A base class for any state of the system """
     __metaclass__ = StateMetaClass
 
-
-class InitialState(State):
-    """ Represents the initial state of the system. The initial state is reachable from ANY other state. """
-
-
-class InitialTransition(Transition):
-    """ A special transformation that configures the system to a blank state.
-
-    It must be possible to perform the transition at any point. I.e. all the states should be transitionable to
-    the initial state. It might me the most expensive transition in the system.
-
-    The transition is bound with :class:`InitialState <state_machine_crawler.InitialState>`. This should not be changed.
-    """
-    target_state = InitialState
+    def __init__(self, system):
+        self._system = system
 
     @abstractmethod
-    def move(self):
-        """ Any code responsible for configuring the system should be placed here """
-
-
-class ErrorState(State):
-    """ Represents a state of the system with abnormal conditions """
-
-
-class ErrorTransition(Transition):
-    """ Base class for managing a transition of the system into the ErrorState.
-
-    Exception is available as *_error* instance attribute.
-
-    The transition is bound with :class:`ErrorState <state_machine_crawler.ErrorState>`. This should not be changed.
-    """
-    target_state = ErrorState
-
-    def __init__(self, system, error):
-        super(ErrorTransition, self).__init__(system)
-        self._error = error
-
-    @abstractmethod
-    def move(self):
-        """ All error logging and/or error handling should be implemented here """
+    def verify(self):
+        """ Checks that the system ended up in a desired state """
 
 
 def _get_cost(states):
@@ -179,28 +156,23 @@ class StateMachineCrawler(object):
         All transition shall change its state.
     initial_transition (subclass of :class:`InitialTransition <state_machine_crawler.InitialTransition>`)
         The first transition to be executed
-    error_transition (subclass of :class:`ErrorTransition <state_machine_crawler.ErrorTransition>`)
-        The transition to be executed when exceptional situation takes place
 
-    >>> scm = StateMachineCrawler(system_object, CustomIntialTransition, CustomErrorTransition)
+    >>> scm = StateMachineCrawler(system_object, CustomIntialTransition)
     """
 
-    def __init__(self, system, initial_transition, error_transition):
+    def __init__(self, system, initial_transition):
         self._system = system
         self._current_state = None
-        if not (isclass(initial_transition) and issubclass(initial_transition, InitialTransition)):
-            raise StateMachineCrawlerError("initial_transition must be InitialTransition subclass")
-        if not (isclass(error_transition) and issubclass(error_transition, ErrorTransition)):
-            raise StateMachineCrawlerError("error_transition must be ErrorTransition subclass")
+        if not (isclass(initial_transition) and issubclass(initial_transition, Transition)):
+            raise DeclarationError("initial_transition must be a Transition subclass")
         self._initial_transition = initial_transition
         self._initial_state = initial_transition.target_state
-        self._error_transition = error_transition
         self._state_graph = self._init_state_graph()
 
     def _init_state_graph(self):
         initial_state = self._initial_transition.target_state
         if initial_state is None:
-            raise StateMachineCrawlerError("Initial transition has no target state")
+            raise DeclarationError("Initial transition has no target state")
         state_graph = _create_transition_map(initial_state)
         for source_state, target_states in state_graph.iteritems():
             target_states.add(initial_state)
@@ -226,22 +198,22 @@ class StateMachineCrawler(object):
         """
         if state is self._initial_state or self._current_state is None:
             self._initial_transition(self._system).move()
+            if not self._initial_state(self._system).verify():
+                raise TransitionError("Getting to the initial state has failed")
             self._current_state = self._initial_state
             if state is self._initial_state:
                 return
         shortest_path = _find_shortest_path(self._state_graph, self._current_state, state)
         if shortest_path is None:
-            raise StateMachineCrawlerError("There is no way to achieve state %r" % state)
+            raise TransitionError("There is no way to achieve state %r" % state)
         if state is self._current_state:
             next_states = [state]
         else:
             next_states = shortest_path[1:]
         for next_state in next_states:
             transition = self._current_state.transition_map[next_state]
-            try:
-                transition(self._system).move()
+            transition(self._system).move()
+            if next_state(self._system).verify():
                 self._current_state = next_state
-            except Exception, error:
-                self._error_transition(self._system, error).move()
-                self.move(self._initial_state)
-                break
+            else:
+                raise TransitionError("Move to state %r has failed" % self._current_state)

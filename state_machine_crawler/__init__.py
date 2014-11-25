@@ -1,5 +1,3 @@
-from .state_machine_crawler import StateMachineCrawlerError, Transition, State, StateMachineCrawler, ErrorTransition, \
-    InitialState, ErrorState, InitialTransition
+from .state_machine_crawler import Transition, State, StateMachineCrawler, DeclarationError, TransitionError
 
-__all__ = ["StateMachineCrawlerError", "Transition", "State", "StateMachineCrawler", "ErrorTransition",
-           "InitialTransition", "InitialState", "ErrorState"]
+__all__ = ["Transition", "State", "StateMachineCrawler", "DeclarationError", "TransitionError"]

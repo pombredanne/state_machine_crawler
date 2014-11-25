@@ -2,18 +2,22 @@ import unittest
 
 import mock
 
-from state_machine_crawler import State, StateMachineCrawler, Transition, StateMachineCrawlerError, ErrorTransition, \
-    InitialTransition, InitialState
+from state_machine_crawler import Transition, StateMachineCrawler, DeclarationError, TransitionError, State as BaseState
 from state_machine_crawler.state_machine_crawler import _create_transition_map, _find_shortest_path
 
 
-class CustomErrorTransition(ErrorTransition):
+class State(BaseState):
 
-    def move(self):
-        self._system.error()
+    def verify(self):
+        return self._system.ok()
 
 
-class EnterTransition(InitialTransition):
+class InitialState(State):
+    pass
+
+
+class InitialTransition(Transition):
+    target_state = InitialState
 
     def move(self):
         self._system.enter()
@@ -83,11 +87,11 @@ class BaseFunctionsTest(unittest.TestCase):
         self.assertEqual(shortest_path, [InitialState, StateOne, StateTwo, StateThreeVariantTwo, StateFour])
 
 
-class TestStateMachine(unittest.TestCase):
+class TestStateMachineTransition(unittest.TestCase):
 
     def setUp(self):
         self.target = mock.Mock()
-        self.smc = StateMachineCrawler(self.target, EnterTransition.link(InitialState), CustomErrorTransition)
+        self.smc = StateMachineCrawler(self.target, InitialTransition)
 
     def test_move(self):
         self.smc.move(StateFour)
@@ -112,24 +116,64 @@ class TestStateMachine(unittest.TestCase):
         self.assertIs(self.smc.state, StateTwo)
 
     def test_unknown_state(self):
-        self.assertRaises(StateMachineCrawlerError, self.smc.move, UnknownState)
-
-    def test_error_transition(self):
-        self.target.unique.side_effect = Exception("Woooooo!")
-        self.smc.move(StateTwo)
-        self.assertIs(self.smc.state, InitialState)
-        self.assertEqual(self.target.error.call_count, 1)
-
-    def test_wrong_initial_state_transition(self):
-        self.assertRaisesRegexp(StateMachineCrawlerError, "initial_transition must be InitialTransition subclass",
-                                StateMachineCrawler, None, UniqueTransition, ErrorTransition)
-
-    def test_wrong_error_state_transition(self):
-        self.assertRaisesRegexp(StateMachineCrawlerError, "error_transition must be ErrorTransition subclass",
-                                StateMachineCrawler, None, EnterTransition, UniqueTransition)
+        self.assertRaises(TransitionError, self.smc.move, UnknownState)
 
     def test_reset_the_state(self):
         self.smc.move(StateOne)
         self.assertEqual(self.target.reset.call_count, 0)
         self.smc.move(StateOne)
         self.assertEqual(self.target.reset.call_count, 1)
+
+    def test_state_verification_failure(self):
+        self.smc.move(InitialState)
+        self.target.ok.return_value = False
+        self.assertRaisesRegexp(TransitionError, "Move to state .+ has failed", self.smc.move, StateOne)
+
+    def test_initial_state_verification_failure(self):
+        self.target.ok.return_value = False
+        self.assertRaisesRegexp(TransitionError, "Getting to the initial state has failed", self.smc.move, InitialState)
+
+
+class TestStateMachineDeclaration(unittest.TestCase):
+
+    def test_wrong_initial_state_transition(self):
+
+        class NotATransition:
+            pass
+
+        self.assertRaisesRegexp(DeclarationError, "initial_transition must be a Transition subclass",
+                                StateMachineCrawler, None, NotATransition)
+
+    def test_stateless_transition(self):
+
+        def declare():
+
+            class BadState(State):
+
+                def verify(self):
+                    return True
+
+                class StatelessTransition(Transition):
+
+                    def move(self):
+                        pass
+
+        self.assertRaisesRegexp(DeclarationError, "No target nor source state is defined for .+", declare)
+
+    def test_normal_declaration(self):
+
+        class PlainState(BaseState):
+
+            def verify(self):
+                return True
+
+        class NormalState(BaseState):
+
+            def verify(self):
+                return True
+
+            class NormalTransition(Transition):
+                target_state = PlainState
+
+                def move(self):
+                    pass
