@@ -38,6 +38,12 @@ class UnknownState(State):
 class StateOne(State):
     from_initial_state = UniqueTransition.link(source_state=InitialState)
 
+    class reset_transition(Transition):
+        target_state = "self"
+
+        def move(self):
+            self._system.reset()
+
 
 class StateTwo(State):
     from_state_one = UniqueTransition.link(source_state=StateOne)
@@ -64,7 +70,7 @@ class BaseFunctionsTest(unittest.TestCase):
     def test_create_transition_map(self):
         self.assertEqual(_create_transition_map(InitialState), {
             InitialState: {StateOne},
-            StateOne: {StateTwo},
+            StateOne: {StateTwo, StateOne},
             StateTwo: {StateThreeVariantOne, StateThreeVariantTwo},
             StateThreeVariantOne: {StateFour},
             StateThreeVariantTwo: {StateFour},
@@ -121,3 +127,9 @@ class TestStateMachine(unittest.TestCase):
     def test_wrong_error_state_transition(self):
         self.assertRaisesRegexp(StateMachineCrawlerError, "error_transition must be ErrorTransition subclass",
                                 StateMachineCrawler, None, EnterTransition, UniqueTransition)
+
+    def test_reset_the_state(self):
+        self.smc.move(StateOne)
+        self.assertEqual(self.target.reset.call_count, 0)
+        self.smc.move(StateOne)
+        self.assertEqual(self.target.reset.call_count, 1)

@@ -70,12 +70,15 @@ class StateMetaClass(type):
             if not (isclass(attr) and issubclass(attr, Transition)):
                 continue
             if attr.target_state:
-                self.transition_map[attr.target_state] = attr
+                if attr.target_state == "self":
+                    attr.target_state = self
+                    self.transition_map[self] = attr
+                else:
+                    self.transition_map[attr.target_state] = attr
             elif attr.source_state:
                 class RelatedTransition(attr):
                     target_state = self
                     source_state = None
-
                 attr.source_state.transition_map[self] = RelatedTransition
             else:
                 raise StateMachineCrawlerError("No target nor source state is defined for %r" % attr)
@@ -221,8 +224,6 @@ class StateMachineCrawler(object):
         >>> scm.state is StateOne
         True
         """
-        if state is self._current_state:
-            return
         if state is self._initial_state or self._current_state is None:
             self._initial_transition(self._system).move()
             self._current_state = self._initial_state
@@ -231,8 +232,11 @@ class StateMachineCrawler(object):
         shortest_path = _find_shortest_path(self._state_graph, self._current_state, state)
         if shortest_path is None:
             raise StateMachineCrawlerError("There is no way to achieve state %r" % state)
-        print shortest_path
-        for next_state in shortest_path[1:]:
+        if state is self._current_state:
+            next_states = [state]
+        else:
+            next_states = shortest_path[1:]
+        for next_state in next_states:
             transition = self._current_state.transition_map[next_state]
             try:
                 transition(self._system).move()
