@@ -1,7 +1,7 @@
-2.1.0
+2.1.0 2014-11-25
 
     [Anton Berezin <gurunars@gmail.com>]
-        * MINOR: mad it possible to transition to the same state
+        * MINOR: made it possible to transition to the same state
 
 2.0.0 2014-11-24
 
