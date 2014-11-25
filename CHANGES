@@ -1,7 +1,7 @@
-2.0.1
+2.1.0
 
     [Anton Berezin <gurunars@gmail.com>]
-        * FILLME
+        * MINOR: mad it possible to transition to the same state
 
 2.0.0 2014-11-24
 
