@@ -7,26 +7,27 @@ class StateMachineError(Exception):
 
 
 class TransitionError(StateMachineError):
-    """ Raised if transition to failed.
+    """ Raised if the transition could not be performed.
 
     Failure could happen because:
+
     - target state is not reachable
     - state verification failed
 
-    NOTE: if transition itself fails - the exception is raised as is because most probably it is a source code issue
+    NOTE: if transition itself fails (i.e. exception in the *move* method) - the exception is raised as is
     """
 
 
 class DeclarationError(StateMachineError):
-    """ Raised if something is wrong with the state machine in general """
+    """ Raised if something is wrong with the state machine declaration in general """
 
 
 class Transition(object):
     """ Represents a transformation of the system from one state into another
 
-    Transitions have *_system* attribute that represents the entity with which all the states are associated.
+    Transitions have a *_system* attribute that represents the entity with which transitions' states are associated.
 
-    Class definition of the transition must have:
+    Class definitions of the transitions must have:
 
     cost (int)
         Relative *price* of the transition. Transitions that take longer time to run are more *expensive*. The *cost*
@@ -39,7 +40,7 @@ class Transition(object):
     The only difference between *target_state* and *source_state* is a direction of the relationship.
 
     Note: there can be only *target_state* or only *source_state* because if a transition from state **A** to state
-    **B** is possible it does not imply that the opposite transition is possible.
+    **B** is possible it does not at all imply that the opposite transition can be performed the same way.
     """
     __metaclass__ = ABCMeta
     cost = 1
@@ -51,7 +52,7 @@ class Transition(object):
     @abstractmethod
     def move(self):
         """
-        Performs the actions to move from state one to state two.
+        Performs the actions to move from one state to another.
         """
 
     @classmethod
@@ -60,7 +61,7 @@ class Transition(object):
         Links an existing transition with a specific state.
 
         This method exists to avoid creating unnecessary subclasses in the situation when multiple states can perform
-        the similar transitions.
+        similar transitions.
         """
         tstate = target_state
         sstate = source_state
@@ -96,7 +97,10 @@ class StateMetaClass(ABCMeta):
 
 
 class State(object):
-    """ A base class for any state of the system """
+    """ A base class for any state of the system
+
+    States have a *_system* attribute that represents the entity with which they are associated.
+    """
     __metaclass__ = StateMetaClass
 
     def __init__(self, system):
@@ -104,7 +108,7 @@ class State(object):
 
     @abstractmethod
     def verify(self):
-        """ Checks that the system ended up in a desired state """
+        """ Checks if the system ended up in a desired state. Should return a boolean. """
 
 
 def _get_cost(states):
@@ -153,9 +157,9 @@ class StateMachineCrawler(object):
     """ The crawler is responsible for orchestrating the transitions of system's states
 
     system
-        All transition shall change its state.
+        All transitions shall change the internal state of this object.
     initial_transition (subclass of :class:`InitialTransition <state_machine_crawler.InitialTransition>`)
-        The first transition to be executed
+        The first transition to be executed to move to the initial state
 
     >>> scm = StateMachineCrawler(system_object, CustomIntialTransition)
     """
@@ -187,7 +191,7 @@ class StateMachineCrawler(object):
         return self._current_state
 
     def move(self, state):
-        """ Performs a transition from the current state to the state passed as the argument
+        """ Performs a transition from the current state to the state passed as an argument
 
         state (subclass of :class:`State <state_machine_crawler.State>`)
             target state of the system
