@@ -12,6 +12,8 @@ except ImportError:
 
 DOCDIR = os.path.abspath(os.path.dirname(__file__))
 SRC_DIR = os.path.dirname(DOCDIR)
+CHANGES_FILE = os.path.join(SRC_DIR, "CHANGES")
+
 sys.path.append(SRC_DIR)
 
 extensions = [
@@ -25,9 +27,10 @@ master_doc = 'index'
 project = u'State Machine Crawler'
 copyright = u'2014, Anton Berezin'
 
-version = '2.1.0'
+with open(CHANGES_FILE) as fil:
+    version = fil.readline().split()[0]
+
 release = version
 exclude_patterns = ['_build']
 pygments_style = 'sphinx'
-html_static_path = ['_static']
 htmlhelp_basename = 'StateMachineCrawlerDoc'
