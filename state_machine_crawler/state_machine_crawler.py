@@ -246,4 +246,4 @@ class StateMachineCrawler(object):
             if next_state(self._system).verify():
                 self._current_state = next_state
             else:
-                raise TransitionError("Move to state %r has failed" % self._current_state)
+                raise TransitionError("Move from state %r to state %r has failed" % (self._current_state, next_state))
