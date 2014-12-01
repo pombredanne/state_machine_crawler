@@ -121,7 +121,7 @@ def _get_cost(states):
     return cost
 
 
-def _find_shortest_path(graph, start, end, path=[]):
+def _find_shortest_path(graph, start, end, path=[], get_cost=_get_cost):
     """ Derived from `here <https://www.python.org/doc/essays/graphs/>`_
 
     Finds the shortest path between two states. Estimations are based on a sum of costs of all transitions.
@@ -134,9 +134,9 @@ def _find_shortest_path(graph, start, end, path=[]):
     shortest = None
     for node in graph[start]:
         if node not in path:
-            newpath = _find_shortest_path(graph, node, end, path)
+            newpath = _find_shortest_path(graph, node, end, path, get_cost)
             if newpath:
-                if not shortest or _get_cost(newpath) < _get_cost(shortest):
+                if not shortest or get_cost(newpath) < get_cost(shortest):
                     shortest = newpath
     return shortest
 
@@ -162,7 +162,33 @@ class StateMachineCrawler(object):
         The first transition to be executed to move to the initial state
 
     >>> scm = StateMachineCrawler(system_object, CustomIntialTransition)
+
+    or
+
+    >>> scm = StateMachineCrawler.create(system_object, CustomIntialTransition)
     """
+
+    @classmethod
+    def create(cls, system, initial_transition):
+        """ Instanciates and returns the crawler with a state that mostly resembles the one the *_system* is in """
+        instance = cls(system, initial_transition)
+        longest_distance = 0
+        current_state = None
+        for state in instance._state_graph:
+            if not state(system).verify():
+                continue
+            shortest_path = _find_shortest_path(instance._state_graph, initial_transition.target_state, state,
+                                                get_cost=len)
+            distance = len(shortest_path)
+            if distance > longest_distance:
+                longest_distance = distance
+                current_state = state
+            elif distance < longest_distance:
+                pass
+            else:
+                raise TransitionError("States %r and %r satisfy system's condition" % (current_state, state))
+        instance._current_state = current_state
+        return instance
 
     def __init__(self, system, initial_transition):
         self._system = system

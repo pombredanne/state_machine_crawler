@@ -177,3 +177,137 @@ class TestStateMachineDeclaration(unittest.TestCase):
 
                 def move(self):
                     pass
+
+
+class TestStateMachineWithStateAutoconfig(unittest.TestCase):
+
+    def test_autostate(self):
+
+        system = {"state_flag": 666}
+
+        class NotACurrentState(State):
+
+            def verify(self):
+                return system["state_flag"] == 13
+
+            class init(Transition):
+                target_state = "self"
+
+                def move(self):
+                    pass
+
+        class AnotherNotACurrentState(State):
+
+            def verify(self):
+                return system["state_flag"] == 6
+
+            class from_start(Transition):
+                source_state = NotACurrentState
+
+                def move(self):
+                    pass
+
+        class CurrentState(State):
+
+            def verify(self):
+                return system["state_flag"] == 666
+
+            class from_another_state(Transition):
+                source_state = AnotherNotACurrentState
+
+                def move(self):
+                    pass
+
+        smc = StateMachineCrawler.create(system, NotACurrentState.init)
+        self.assertIs(smc._current_state, CurrentState)
+
+    def test_autostate_with_furthermost_state(self):
+
+        system = {"state_flag": 666}
+
+        class NotACurrentState(State):
+
+            def verify(self):
+                return system["state_flag"] == 13
+
+            class init(Transition):
+                target_state = "self"
+
+                def move(self):
+                    pass
+
+        class AnotherNotACurrentState(State):
+
+            def verify(self):
+                return system["state_flag"] == 666
+
+            class from_start(Transition):
+                source_state = NotACurrentState
+
+                def move(self):
+                    pass
+
+        class CurrentState(State):
+
+            def verify(self):
+                return system["state_flag"] == 666
+
+            class from_another_state(Transition):
+                source_state = AnotherNotACurrentState
+
+                def move(self):
+                    pass
+
+        smc = StateMachineCrawler.create(system, NotACurrentState.init)
+        self.assertIs(smc._current_state, CurrentState)
+
+    def test_autostate_conflict(self):
+
+        system = {"state_flag": 666}
+
+        class NotACurrentState(State):
+
+            def verify(self):
+                return system["state_flag"] == 13
+
+            class init(Transition):
+                target_state = "self"
+
+                def move(self):
+                    pass
+
+        class AnotherNotACurrentState(State):
+
+            def verify(self):
+                return system["state_flag"] == 6
+
+            class from_start(Transition):
+                source_state = NotACurrentState
+
+                def move(self):
+                    pass
+
+        class CurrentState(State):
+
+            def verify(self):
+                return system["state_flag"] == 666
+
+            class from_another_state(Transition):
+                source_state = AnotherNotACurrentState
+
+                def move(self):
+                    pass
+
+        class ConflictingState(State):
+
+            def verify(self):
+                return system["state_flag"] == 666
+
+            class from_another_state(Transition):
+                source_state = AnotherNotACurrentState
+
+                def move(self):
+                    pass
+
+        self.assertRaisesRegexp(TransitionError, "States .+ and .+ satisfy system's condition",
+                                StateMachineCrawler.create, system, NotACurrentState.init)
