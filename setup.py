@@ -14,6 +14,7 @@ setup(
     description="A library for following automata based programming model.",
     version=version,
     packages=find_packages(),
+    install_requires=["pydot2"],
     author="Anton Berezin",
     author_email="gurunars@gmail.com"
 )

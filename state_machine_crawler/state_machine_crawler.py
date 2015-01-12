@@ -82,6 +82,7 @@ class StateMetaClass(ABCMeta):
             if not (isclass(attr) and issubclass(attr, Transition)):
                 continue
             if attr.target_state:
+                attr.source_state = self
                 if attr.target_state == "self":
                     attr.target_state = self
                     self.transition_map[self] = attr
@@ -90,7 +91,7 @@ class StateMetaClass(ABCMeta):
             elif attr.source_state:
                 class RelatedTransition(attr):
                     target_state = self
-                    source_state = None
+                RelatedTransition.__name__ = name
                 attr.source_state.transition_map[self] = RelatedTransition
             else:
                 raise DeclarationError("No target nor source state is defined for %r" % attr)
@@ -192,7 +193,7 @@ class StateMachineCrawler(object):
 
     def __init__(self, system, initial_transition):
         self._system = system
-        self._current_state = None
+        self._current_state = self._current_transition = None
         if not (isclass(initial_transition) and issubclass(initial_transition, Transition)):
             raise DeclarationError("initial_transition must be a Transition subclass")
         self._initial_transition = initial_transition
@@ -241,7 +242,7 @@ class StateMachineCrawler(object):
         else:
             next_states = shortest_path[1:]
         for next_state in next_states:
-            transition = self._current_state.transition_map[next_state]
+            self._current_transition = transition = self._current_state.transition_map[next_state]
             transition(self._system).move()
             if next_state(self._system).verify():
                 self._current_state = next_state

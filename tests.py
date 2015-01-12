@@ -1,14 +1,21 @@
 import unittest
+import time
 
 import mock
 
-from state_machine_crawler import Transition, StateMachineCrawler, DeclarationError, TransitionError, State as BaseState
+from state_machine_crawler import Transition, StateMachineCrawler, DeclarationError, TransitionError, \
+    State as BaseState, GraphMonitor
 from state_machine_crawler.state_machine_crawler import _create_transition_map, _find_shortest_path
+
+
+SLOW_MO = True  # set to True to see GUI monitor
 
 
 class State(BaseState):
 
     def verify(self):
+        if SLOW_MO:
+            time.sleep(1)
         return self._system.ok()
 
 
@@ -20,18 +27,24 @@ class InitialTransition(Transition):
     target_state = InitialState
 
     def move(self):
+        if SLOW_MO:
+            time.sleep(1)
         self._system.enter()
 
 
 class UniqueTransition(Transition):
 
     def move(self):
+        if SLOW_MO:
+            time.sleep(1)
         self._system.unique()
 
 
 class NonUniqueTransition(Transition):
 
     def move(self):
+        if SLOW_MO:
+            time.sleep(1)
         self._system.non_unique()
 
 
@@ -46,6 +59,8 @@ class StateOne(State):
         target_state = "self"
 
         def move(self):
+            if SLOW_MO:
+                time.sleep(1)
             self._system.reset()
 
 
@@ -89,9 +104,19 @@ class BaseFunctionsTest(unittest.TestCase):
 
 class TestStateMachineTransition(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        cls.monitor = GraphMonitor("state-crawler-tests", None)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.monitor.stop()
+
     def setUp(self):
         self.target = mock.Mock()
         self.smc = StateMachineCrawler(self.target, InitialTransition)
+        self.monitor.crawler = self.smc
+        self.monitor.start()
 
     def test_move(self):
         self.smc.move(StateFour)
@@ -127,7 +152,7 @@ class TestStateMachineTransition(unittest.TestCase):
     def test_state_verification_failure(self):
         self.smc.move(InitialState)
         self.target.ok.return_value = False
-        self.assertRaisesRegexp(TransitionError, "Move to state .+ has failed", self.smc.move, StateOne)
+        self.assertRaisesRegexp(TransitionError, "Move from state .+ to state .+ has failed", self.smc.move, StateOne)
 
     def test_initial_state_verification_failure(self):
         self.target.ok.return_value = False
