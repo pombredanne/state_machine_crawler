@@ -10,6 +10,8 @@ transitions between states but actually finds the shortest path between two stat
 the states in the form of a `directed graph <http://en.wikipedia.org/wiki/Directed_graph>`_. Such model allows to employ
 pure mathematical algorithms to measure distances between the nodes.
 
+For usage examples please have a look at *tests.py* in the root project directory.
+
 Primitives
 ----------
 
@@ -35,3 +37,11 @@ Error class
 .. autoclass:: state_machine_crawler.DeclarationError
 
 .. autoclass:: state_machine_crawler.TransitionError
+
+Graphviz visualization
+----------------------
+
+When state machine gets big it might become difficult to monitor state transitions within it. In such a case a
+*GraphMonitor* class should be used:
+
+.. autoclass:: state_machine_crawler.GraphMonitor

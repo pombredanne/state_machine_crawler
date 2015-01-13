@@ -171,7 +171,8 @@ class StateMachineCrawler(object):
 
     @classmethod
     def create(cls, system, initial_transition):
-        """ Instanciates and returns the crawler with a state that mostly resembles the one the *_system* is in """
+        """ Instanciates and returns the crawler with a state that mostly resembles the one the *_system* is in.
+        The state does not necessarily have to be the initial one."""
         instance = cls(system, initial_transition)
         longest_distance = 0
         current_state = None
