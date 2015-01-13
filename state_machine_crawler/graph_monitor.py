@@ -1,5 +1,6 @@
 import time
 import threading
+import os
 
 import pydot
 
@@ -16,6 +17,17 @@ class GraphMonitor(object):
         self.crawler = crawler  # intentionally public
         self._refresher_check_time = time.time()
         self._title = title
+
+    @property
+    def _can_be_started(self):
+        if not os.environ.get("DISPLAY", False):
+            print "Display is not available"
+            return False
+        elif not pydot.find_graphviz():
+            print "Graphviz is not available"
+            return False
+        else:
+            return True
 
     def _set_node(self, state, current_state):
         source_node = pydot.Node(state.__name__)
@@ -61,6 +73,8 @@ class GraphMonitor(object):
                 self._refresher_check_time = time.time()
 
     def start(self):
+        if not self._can_be_started:
+            return
         if self._status.alive:
             return
         if not self.crawler:

@@ -8,7 +8,7 @@ from state_machine_crawler import Transition, StateMachineCrawler, DeclarationEr
 from state_machine_crawler.state_machine_crawler import _create_transition_map, _find_shortest_path
 
 
-SLOW_MO = True  # set to True to see GUI monitor
+SLOW_MO = False  # set to True to see GUI monitor
 
 
 class State(BaseState):
