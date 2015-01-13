@@ -56,9 +56,9 @@ class GraphMonitor(object):
     def _run_graph_refresher(self):
         while self._status.alive:
             now = time.time()
-            if self._refresher_check_time + 0.5 < now:
-                self._refresher_check_time = now
+            if self._refresher_check_time + 0.2 < now:
                 self.save()
+                self._refresher_check_time = time.time()
 
     def start(self):
         if self._status.alive:

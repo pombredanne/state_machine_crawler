@@ -62,7 +62,7 @@ def run_viewer(file_name, status_object=None):
         if not status_object.alive:
             viewer.quit()
             return
-        viewer.after(100, loop)
+        viewer.after(50, loop)
 
     loop()
     viewer.mainloop()

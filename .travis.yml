@@ -2,6 +2,8 @@ language: python
 python:
 - '2.7'
 script: nosetests --with-coverage --cover-package=state_machine_crawler --cover-min-percentage=100 -v
+install:
+  - "python setup.py install"
 deploy:
   provider: pypi
   user: gurunars
