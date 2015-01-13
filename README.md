@@ -45,13 +45,14 @@ Notes:
 2. Merge **dev** into **master**
 3. Make sure that all checks and tests pass
 4. Increment the version in **CHANGES** file according to the types of changes made since the latest release. Add
-   timestamp to indicate that the version was released.
-5. Commit the changes
-6. Execute "git tag VERSION -m VERSION"
-7. Switch to **dev**
-8. Merge **master** into **dev**
-9. Push **dev** & **master** branches to upstream
-10. Push tags to upstream
+   timestamp to indicate when the version was released.
+5. Add bullet points based on git log entries
+6. Commit the changes
+7. Execute "git tag VERSION -m VERSION"
+8. Switch to **dev**
+9. Merge **master** into **dev**
+10. Push **dev** & **master** branches to upstream
+11. Push tags to upstream
 
 ## Pull requests
 
@@ -61,8 +62,7 @@ Always create your own feature branches from the **dev** branch. Not from **mast
 2. pep8 and pyflakes checks are supposed to pass
 3. All tests are supposed to pass
 4. If it is a new feature - make sure that new tests are created and they pass
-5. Add a new set of bullet points to the latest changelog entry according to the specified format
-6. Create a pull request against the **dev** branch
+5. Create a pull request against the **dev** branch
 
 ## Commits
 
