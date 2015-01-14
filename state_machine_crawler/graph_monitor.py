@@ -1,7 +1,8 @@
 import time
 import threading
 import os
-from Tkinter import PhotoImage, Tk, Canvas, VERTICAL, HORIZONTAL, BOTTOM, RIGHT, LEFT, Y, X, BOTH, Scrollbar
+from Tkinter import PhotoImage, Tk, Canvas, VERTICAL, HORIZONTAL, BOTTOM, RIGHT, LEFT, Y, X, BOTH, Scrollbar, NW, \
+    CURRENT
 
 import pydot
 
@@ -12,63 +13,103 @@ class StatusObject:
         self.alive = True
 
 
-def run_viewer(file_name, status_object=None):
+def abs_val(value, limit):
+    if value > limit:
+        return limit
+    if value < limit:
+        return value
+    return limit
 
-    status_object = status_object or StatusObject()
 
-    viewer = Tk()
-    viewer.title(file_name)
+class GraphViewer(object):
 
-    while not os.path.exists(file_name):
-        if status_object.alive:
-            continue
-        else:
+    def __init__(self, file_name, status_object=None):
+        self._file_name = file_name
+        self._status_object = status_object or StatusObject()
+        self._main_window = mw = Tk()
+        mw.title(file_name)
+        self._zoom_ratio = 1
+        self._img = img = self._create_image()
+        if img is None:
             return
+        self._canvas = canvas = Canvas(mw, width=abs_val(img.width(), 1024), heigh=abs_val(img.height(), 768),
+                                       scrollregion=(0, 0, img.width(), img.height()))
 
-    ok = False
+        self._hbar = hbar = Scrollbar(mw, orient=HORIZONTAL)
+        hbar.config(command=canvas.xview)
 
-    while not ok:
-        if not status_object.alive:
+        self._vbar = vbar = Scrollbar(mw, orient=VERTICAL)
+        vbar.config(command=canvas.yview)
+
+        self._image_on_canvas = canvas.create_image(0, 0, image=img, anchor=NW)
+        canvas.config(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
+
+        hbar.pack(side=BOTTOM, fill=X)
+        vbar.pack(side=RIGHT, fill=Y)
+        canvas.pack(side=LEFT, expand=True, fill=BOTH)
+
+        canvas.bind_all('<4>', self._zoomIn, add='+')
+        canvas.bind_all('<5>', self._zoomOut, add='+')
+        canvas.tag_bind(CURRENT, "<Button-1>", self._click)
+        canvas.tag_bind(CURRENT, "<B1-Motion>", self._move)
+        canvas.focus_set()
+
+        self._reload()
+        mw.mainloop()
+
+    def _create_image(self):
+        while not os.path.exists(self._file_name):
+            if self._status_object.alive:
+                continue
+            else:
+                return
+
+        while True:
+            if not self._status_object.alive:
+                return
+            try:
+                return PhotoImage(file=self._file_name)
+            except:
+                pass
+
+    def _update_scroll_area(self):
+        self._canvas.configure(scrollregion=(0, 0, self._img.width(), self._img.height()))
+
+    def _zoom(self, event, prev_zoom):
+        self._img.subsample(self._zoom_ratio)
+        self._update_scroll_area()
+
+    def _zoomIn(self, event):
+        prev_zoom = self._zoom_ratio
+        self._zoom_ratio = max(1, self._zoom_ratio - 1)
+        self._zoom(event, prev_zoom)
+
+    def _zoomOut(self, event):
+        prev_zoom = self._zoom_ratio
+        self._zoom_ratio = max(1, self._zoom_ratio + 1)
+        self._zoom(event, prev_zoom)
+
+    def _click(self, event):
+        self._canvas.scan_mark(event.x, event.y)
+
+    def _move(self, event):
+        self._canvas.scan_dragto(event.x, event.y, gain=self._zoom_ratio)
+
+    def _reload(self):
+        self._refresh_viewer()
+        if not self._status_object.alive:
+            self._main_window.quit()
             return
+        self._main_window.after(50, self._reload)
+
+    def _refresh_viewer(self):
         try:
-            img = PhotoImage(file=file_name)
-            ok = True
+            refreshed_photo = PhotoImage(file=self._file_name).subsample(self._zoom_ratio)
+            self._canvas.itemconfig(self._image_on_canvas, image=refreshed_photo)
+            self._img = refreshed_photo
+            self._update_scroll_area()
         except:
             pass
-
-    canvas = Canvas(viewer, width=min(img.width(), 1024), heigh=min(img.height(), 768),
-                    scrollregion=(0, 0, img.width(), img.height()))
-
-    hbar = Scrollbar(viewer, orient=HORIZONTAL)
-    hbar.config(command=canvas.xview)
-
-    vbar = Scrollbar(viewer, orient=VERTICAL)
-    vbar.config(command=canvas.yview)
-
-    image_on_canvas = canvas.create_image(img.width() / 2, img.height() / 2, image=img)
-    canvas.config(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
-
-    hbar.pack(side=BOTTOM, fill=X)
-    vbar.pack(side=RIGHT, fill=Y)
-    canvas.pack(side=LEFT, expand=True, fill=BOTH)
-
-    def _refresh_viewer():
-        try:
-            refreshed_photo = PhotoImage(file=file_name)
-            canvas.itemconfig(image_on_canvas, image=refreshed_photo)
-            canvas.img = refreshed_photo
-        except:
-            pass
-
-    def loop():
-        _refresh_viewer()
-        if not status_object.alive:
-            viewer.quit()
-            return
-        viewer.after(50, loop)
-
-    loop()
-    viewer.mainloop()
 
 
 class GraphMonitor(object):
@@ -91,7 +132,7 @@ class GraphMonitor(object):
         self._status = StatusObject()
         self._status.alive = False
         self._refresher_thread = threading.Thread(target=self._run_graph_refresher)
-        self._viewer_thread = threading.Thread(target=run_viewer, args=(title + ".png", self._status))
+        self._viewer_thread = threading.Thread(target=GraphViewer, args=(title + ".png", self._status))
         self.crawler = crawler  # intentionally public
         self._refresher_check_time = time.time()
         self._title = title
