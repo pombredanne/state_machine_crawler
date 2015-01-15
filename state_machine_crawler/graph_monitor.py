@@ -168,16 +168,11 @@ class GraphMonitor(object):
         edge = pydot.Edge(transition.source_state.__name__, transition.target_state.__name__)
         if transition is error_transition:
             color = "red"
-            text_color = "red"
         elif transition is current_transition:
             color = "forestgreen"
-            text_color = "forestgreen"
         else:
             color = "black"
-            text_color = "black"
         edge.set_color(color)
-        edge.set_fontcolor(text_color)
-        edge.set_label(transition.__name__)
         self._graph.add_edge(edge)
 
     def _gen_graph(self, source_state, cur_state, cur_transition, error_state, error_transition):
