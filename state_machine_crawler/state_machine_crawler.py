@@ -250,6 +250,7 @@ class StateMachineCrawler(object):
 
     def _do_step(self, next_state):
         self._current_transition = transition = self._current_state.transition_map[next_state]
+        self._on_state_change()
         try:
             LOG.info("Transition to state %s started", next_state)
             transition(self._system).move()
