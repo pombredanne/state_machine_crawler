@@ -8,7 +8,7 @@ from state_machine_crawler import Transition, StateMachineCrawler, DeclarationEr
 from state_machine_crawler.state_machine_crawler import _create_transition_map, _find_shortest_path
 
 # set to time in seconds to configure duration of each transition and verification
-EXEC_TIME = 0.5
+EXEC_TIME = 0.0
 
 
 class State(BaseState):
@@ -104,24 +104,27 @@ class BaseFunctionsTest(unittest.TestCase):
         self.assertEqual(shortest_path, [InitialState, StateOne, StateTwo, StateThreeVariantTwo, StateFour])
 
 
-class TestStateMachineTransition(unittest.TestCase):
+class BaseTestStateMachineTransitionCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.monitor = GraphMonitor("state-crawler-tests", None)
         cls.target = mock.Mock()
         cls.smc = StateMachineCrawler(cls.target, InitialTransition)
-        cls.monitor.crawler = cls.smc
-        cls.smc.set_on_state_change_handler(cls.monitor)
-        cls.monitor.start()
+        if EXEC_TIME:
+            cls.monitor = GraphMonitor("state-crawler-tests", None)
+            cls.monitor.crawler = cls.smc
+            cls.smc.set_on_state_change_handler(cls.monitor)
+            cls.monitor.start()
 
     @classmethod
     def tearDownClass(cls):
-        cls.monitor.stop()
+        if EXEC_TIME:
+            cls.monitor.stop()
+
+
+class PositiveTestStateMachineTransitionTest(BaseTestStateMachineTransitionCase):
 
     def setUp(self):
-        self.target.reset_mock()
-        self.target.ok.return_value = True
         self.smc.move(InitialState)
 
     def test_move(self):
@@ -152,6 +155,13 @@ class TestStateMachineTransition(unittest.TestCase):
         self.assertEqual(self.target.reset.call_count, 0)
         self.smc.move(StateOne)
         self.assertEqual(self.target.reset.call_count, 1)
+
+
+class NegativeTestCases(unittest.TestCase):
+
+    def setUp(self):
+        self.target = mock.Mock()
+        self.smc = StateMachineCrawler(self.target, InitialTransition)
 
     def test_state_verification_failure(self):
         self.smc.move(InitialState)

@@ -214,6 +214,8 @@ class GraphMonitor(object):
         self._graph.write_png(self._title + ".png")
 
     def __call__(self):
+        if not self._can_be_started:
+            return
         self._save()
 
     def start(self):
