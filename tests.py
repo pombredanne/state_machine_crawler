@@ -56,7 +56,6 @@ class StateOne(State):
 
         def move(self):
             time.sleep(EXEC_TIME)
-            1 / 0
             self._system.reset()
 
 
@@ -112,6 +111,7 @@ class TestStateMachineTransition(unittest.TestCase):
         self.target = mock.Mock()
         self.smc = StateMachineCrawler(self.target, InitialTransition)
         self.monitor.crawler = self.smc
+        self.smc.set_on_state_change_handler(self.monitor)
         self.monitor.start()
 
     def test_move(self):

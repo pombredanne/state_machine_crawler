@@ -210,6 +210,7 @@ class StateMachineCrawler(object):
         self._initial_transition = initial_transition
         self._initial_state = initial_transition.target_state
         self._state_graph = self._init_state_graph()
+        self._on_state_change = lambda: None
         LOG.info("State machine crawler initialized")
 
     def _init_state_graph(self):
@@ -239,9 +240,11 @@ class StateMachineCrawler(object):
             LOG.info("Transition to state %s started", next_state)
             transition(self._system).move()
             LOG.info("Transition to state %s finished", next_state)
+            self._on_state_change()
         except:
             self._error_transition = transition
             LOG.exception("Failed to move to: %s", next_state)
+            self._on_state_change()
             self._err(next_state, "transition failure")
         try:
             LOG.info("Verification of state %s started", next_state)
@@ -253,10 +256,16 @@ class StateMachineCrawler(object):
         if ok:
             self._current_state = next_state
             LOG.info("State changed to %s", next_state)
+            self._on_state_change()
         else:
             self._error_state = next_state
             LOG.error("State verification error for: %s", next_state)
+            self._on_state_change()
             self._err(next_state, "verification failure")
+        self._error_transition = self._error_state = None
+
+    def set_on_state_change_handler(self, handler):
+        self._on_state_change = handler
 
     def move(self, state):
         """ Performs a transition from the current state to the state passed as an argument

@@ -1,4 +1,3 @@
-import time
 import threading
 import os
 from Tkinter import PhotoImage, Tk, Canvas, VERTICAL, HORIZONTAL, BOTTOM, RIGHT, LEFT, Y, X, BOTH, Scrollbar, NW, \
@@ -131,10 +130,8 @@ class GraphMonitor(object):
     def __init__(self, title, crawler):
         self._status = StatusObject()
         self._status.alive = False
-        self._refresher_thread = threading.Thread(target=self._run_graph_refresher)
         self._viewer_thread = threading.Thread(target=GraphViewer, args=(title + ".png", self._status))
         self.crawler = crawler  # intentionally public
-        self._refresher_check_time = time.time()
         self._title = title
 
     @property
@@ -151,12 +148,12 @@ class GraphMonitor(object):
     def _set_node(self, state, current_state, error_state):
         source_node = pydot.Node(state.__name__)
         source_node.set_style("filled")
-        if state is current_state:
-            color = "forestgreen"
-            text_color = "white"
-        elif state is error_state:
+        if state is error_state:
             color = "red"
             text_color = "black"
+        elif state is current_state:
+            color = "forestgreen"
+            text_color = "white"
         else:
             color = "white"
             text_color = "black"
@@ -169,12 +166,12 @@ class GraphMonitor(object):
         if not transition.source_state:
             return
         edge = pydot.Edge(transition.source_state.__name__, transition.target_state.__name__)
-        if transition is current_transition:
-            color = "forestgreen"
-            text_color = "forestgreen"
-        elif transition is error_transition:
+        if transition is error_transition:
             color = "red"
             text_color = "red"
+        elif transition is current_transition:
+            color = "forestgreen"
+            text_color = "forestgreen"
         else:
             color = "black"
             text_color = "black"
@@ -201,12 +198,8 @@ class GraphMonitor(object):
                         cr._error_state, cr._error_transition)
         self._graph.write_png(self._title + ".png")
 
-    def _run_graph_refresher(self):
-        while self._status.alive:
-            now = time.time()
-            if self._refresher_check_time + 0.2 < now:
-                self._save()
-                self._refresher_check_time = time.time()
+    def __call__(self):
+        self._save()
 
     def start(self):
         """ Launches the monitor in a separate thread """
@@ -217,7 +210,6 @@ class GraphMonitor(object):
         if not self.crawler:
             return
         self._status.alive = True
-        self._refresher_thread.start()
         self._viewer_thread.start()
 
     def stop(self):
@@ -225,5 +217,4 @@ class GraphMonitor(object):
         if not self._status.alive:
             return
         self._status.alive = False
-        self._refresher_thread.join()
         self._viewer_thread.join()
