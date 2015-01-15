@@ -262,6 +262,7 @@ class StateMachineCrawler(object):
             transition_ok = False
         self._on_state_change()
         if not transition_ok:
+            self._current_state = self._entry_point
             self._err(next_state, "transition failure")
         try:
             LOG.info("Verification of state %s started", next_state)
@@ -278,6 +279,7 @@ class StateMachineCrawler(object):
             self._error_states.add(next_state)
             LOG.error("State verification error for: %s", next_state)
             self._on_state_change()
+            self._current_state = self._entry_point
             self._err(next_state, "verification failure")
 
     def set_on_state_change_handler(self, handler):
