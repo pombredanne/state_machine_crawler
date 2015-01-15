@@ -148,12 +148,15 @@ class GraphMonitor(object):
         else:
             return True
 
-    def _set_node(self, state, current_state):
+    def _set_node(self, state, current_state, error_state):
         source_node = pydot.Node(state.__name__)
         source_node.set_style("filled")
         if state is current_state:
             color = "forestgreen"
             text_color = "white"
+        elif state is error_state:
+            color = "red"
+            text_color = "black"
         else:
             color = "white"
             text_color = "black"
@@ -162,13 +165,16 @@ class GraphMonitor(object):
         source_node.set_shape("box")
         self._graph.add_node(source_node)
 
-    def _set_edge(self, transition, current_transition):
+    def _set_edge(self, transition, current_transition, error_transition):
         if not transition.source_state:
             return
         edge = pydot.Edge(transition.source_state.__name__, transition.target_state.__name__)
         if transition is current_transition:
             color = "forestgreen"
             text_color = "forestgreen"
+        elif transition is error_transition:
+            color = "red"
+            text_color = "red"
         else:
             color = "black"
             text_color = "black"
@@ -177,20 +183,22 @@ class GraphMonitor(object):
         edge.set_label(transition.__name__)
         self._graph.add_edge(edge)
 
-    def _gen_graph(self, source_state, cur_state, cur_transition):
+    def _gen_graph(self, source_state, cur_state, cur_transition, error_state, error_transition):
         for target_state, transition in source_state.transition_map.iteritems():
             if transition in self._processed_transitions:
                 continue
             self._processed_transitions.add(transition)
-            self._set_node(target_state, cur_state)
-            self._set_edge(transition, cur_transition)
-            self._gen_graph(target_state, cur_state, cur_transition)
+            self._set_node(target_state, cur_state, error_state)
+            self._set_edge(transition, cur_transition, error_transition)
+            self._gen_graph(target_state, cur_state, cur_transition, error_state, error_transition)
 
     def _save(self):
         self._processed_transitions = set()
         self._graph = pydot.Dot(self._title, graph_type='digraph')
         self._graph.set_splines("polyline")
-        self._gen_graph(self.crawler._initial_state, self.crawler._current_state, self.crawler._current_transition)
+        cr = self.crawler
+        self._gen_graph(cr._initial_state, cr._current_state, cr._current_transition,
+                        cr._error_state, cr._error_transition)
         self._graph.write_png(self._title + ".png")
 
     def _run_graph_refresher(self):

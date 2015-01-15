@@ -204,6 +204,7 @@ class StateMachineCrawler(object):
     def __init__(self, system, initial_transition):
         self._system = system
         self._current_state = self._current_transition = None
+        self._error_state = self._error_transition = None  # placeholders for the classes that caused transition failure
         if not (isclass(initial_transition) and issubclass(initial_transition, Transition)):
             raise DeclarationError("initial_transition must be a Transition subclass")
         self._initial_transition = initial_transition
@@ -239,6 +240,7 @@ class StateMachineCrawler(object):
             transition(self._system).move()
             LOG.info("Transition to state %s finished", next_state)
         except:
+            self._error_transition = transition
             LOG.exception("Failed to move to: %s", next_state)
             self._err(next_state, "transition failure")
         try:
@@ -252,6 +254,7 @@ class StateMachineCrawler(object):
             self._current_state = next_state
             LOG.info("State changed to %s", next_state)
         else:
+            self._error_state = next_state
             LOG.error("State verification error for: %s", next_state)
             self._err(next_state, "verification failure")
 
