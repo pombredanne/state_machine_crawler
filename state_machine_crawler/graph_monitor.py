@@ -151,11 +151,11 @@ class GraphMonitor(object):
         source_node.set_shape("doublecircle")
         self._graph.add_node(source_node)
 
-    def _set_node(self, state, current_state, error_state):
+    def _set_node(self, state, current_state, error_states):
         source_node = pydot.Node(state.__name__)
         source_node.set_style("filled")
 
-        if state is error_state:
+        if state in error_states:
             color = "red"
             text_color = "black"
         elif state is current_state:
@@ -169,20 +169,20 @@ class GraphMonitor(object):
         source_node.set_shape("box")
         self._graph.add_node(source_node)
 
-    def _set_edge(self, transition, current_transition, error_transition):
+    def _set_edge(self, transition, current_transition, error_transitions):
         if not transition.source_state:
             return
         edge = pydot.Edge(transition.source_state.__name__, transition.target_state.__name__)
 
-        def _eqivalent(transition_one, transition_two):
+        def _equivalent(transition_one, transition_two):
             one = inspect.isclass(transition_one) and inspect.isclass(transition_two) and \
                 issubclass(transition_one, transition_two) and \
                 transition_one.source_state is transition_two.source_state
             return transition_one is transition_two or one
 
-        if _eqivalent(transition, error_transition):
+        if filter(lambda error_transition: _equivalent(transition, error_transition), error_transitions):
             color = "red"
-        elif _eqivalent(transition, current_transition):
+        elif _equivalent(transition, current_transition):
             color = "forestgreen"
         else:
             color = "black"
@@ -191,16 +191,16 @@ class GraphMonitor(object):
             edge.set_style("dashed")
         self._graph.add_edge(edge)
 
-    def _gen_graph(self, source_state, cur_state, cur_transition, error_state, error_transition):
+    def _gen_graph(self, source_state, cur_state, cur_transition, error_states, error_transitions):
         items = source_state.transition_map.items()
 
         for target_state, transition in items:
             if transition in self._processed_transitions:
                 continue
             self._processed_transitions.add(transition)
-            self._set_node(target_state, cur_state, error_state)
-            self._set_edge(transition, cur_transition, error_transition)
-            self._gen_graph(target_state, cur_state, cur_transition, error_state, error_transition)
+            self._set_node(target_state, cur_state, error_states)
+            self._set_edge(transition, cur_transition, error_transitions)
+            self._gen_graph(target_state, cur_state, cur_transition, error_states, error_transitions)
 
     def _save(self):
         self._processed_transitions = set()
@@ -210,7 +210,7 @@ class GraphMonitor(object):
         cr = self.crawler
         self._set_entry_point()
         self._gen_graph(cr._entry_point, cr._current_state, cr._current_transition,
-                        cr._error_state, cr._error_transition)
+                        cr._error_states, cr._error_transitions)
         self._graph.write_png(self._title + ".png")
 
     def __call__(self):

@@ -226,7 +226,9 @@ class StateMachineCrawler(object):
 
         self._system = system
         self._current_transition = None
-        self._error_state = self._error_transition = None  # placeholders for the classes that caused transition failure
+        # placeholders for the classes that caused transition failure
+        self._error_states = set()
+        self._error_transitions = set()
         self._initial_transition = initial_transition
         self._initial_state = initial_transition.target_state
         self._state_graph = _create_transition_map(initial_transition)
@@ -262,7 +264,7 @@ class StateMachineCrawler(object):
             LOG.info("Transition to state %s finished", next_state)
             transition_ok = True
         except:
-            self._error_transition = transition
+            self._error_transitions.add(transition)
             LOG.exception("Failed to move to: %s", next_state)
             transition_ok = False
         self._on_state_change()
@@ -280,11 +282,10 @@ class StateMachineCrawler(object):
             LOG.info("State changed to %s", next_state)
             self._on_state_change()
         else:
-            self._error_state = next_state
+            self._error_states.add(next_state)
             LOG.error("State verification error for: %s", next_state)
             self._on_state_change()
             self._err(next_state, "verification failure")
-        self._error_transition = self._error_state = None
 
     def set_on_state_change_handler(self, handler):
         self._on_state_change = handler
