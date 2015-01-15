@@ -156,7 +156,8 @@ class TestStateMachineTransition(unittest.TestCase):
 
     def test_initial_state_verification_failure(self):
         self.target.ok.return_value = False
-        self.assertRaisesRegexp(TransitionError, "Getting to the initial state has failed", self.smc.move, InitialState)
+        self.assertRaisesRegexp(TransitionError, "Move from state None to state .+ has failed: verification failure",
+                                self.smc.move, InitialState)
 
 
 class TestStateMachineDeclaration(unittest.TestCase):

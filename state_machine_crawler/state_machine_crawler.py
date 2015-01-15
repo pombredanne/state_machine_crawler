@@ -1,5 +1,14 @@
+import logging
 from inspect import isclass
 from abc import ABCMeta, abstractmethod
+
+
+LOG = logging.getLogger("state_machine_crawler")
+
+ch = logging.StreamHandler()
+ch.setFormatter(logging.Formatter("%(message)s"))
+
+LOG.addHandler(ch)
 
 
 class StateMachineError(Exception):
@@ -200,6 +209,7 @@ class StateMachineCrawler(object):
         self._initial_transition = initial_transition
         self._initial_state = initial_transition.target_state
         self._state_graph = self._init_state_graph()
+        LOG.info("State machine crawler initialized")
 
     def _init_state_graph(self):
         initial_state = self._initial_transition.target_state
@@ -218,6 +228,33 @@ class StateMachineCrawler(object):
         """ Represents a current state of the sytstem """
         return self._current_state
 
+    def _err(self, target_state, msg):
+        raise TransitionError("Move from state %r to state %r has failed: %s" % (self._current_state,
+                                                                                 target_state, msg))
+
+    def _do_transition(self, transition, next_state):
+        self._current_transition = transition
+        try:
+            LOG.info("Transition to state %s started", next_state)
+            transition(self._system).move()
+            LOG.info("Transition to state %s finished", next_state)
+        except:
+            LOG.exception("Failed to move to: %s", next_state)
+            self._err(next_state, "transition failure")
+        try:
+            LOG.info("Verification of state %s started", next_state)
+            ok = next_state(self._system).verify()
+            LOG.info("Verification of state %s finished", next_state)
+        except:
+            LOG.exception("Failed to verify transition to: %s" % next_state)
+            ok = False
+        if ok:
+            self._current_state = next_state
+            LOG.info("State changed to %s", next_state)
+        else:
+            LOG.error("State verification error for: %s", next_state)
+            self._err(next_state, "verification failure")
+
     def move(self, state):
         """ Performs a transition from the current state to the state passed as an argument
 
@@ -229,10 +266,7 @@ class StateMachineCrawler(object):
         True
         """
         if state is self._initial_state or self._current_state is None:
-            self._initial_transition(self._system).move()
-            if not self._initial_state(self._system).verify():
-                raise TransitionError("Getting to the initial state has failed")
-            self._current_state = self._initial_state
+            self._do_transition(self._initial_transition, self._initial_state)
             if state is self._initial_state:
                 return
         shortest_path = _find_shortest_path(self._state_graph, self._current_state, state)
@@ -243,9 +277,4 @@ class StateMachineCrawler(object):
         else:
             next_states = shortest_path[1:]
         for next_state in next_states:
-            self._current_transition = transition = self._current_state.transition_map[next_state]
-            transition(self._system).move()
-            if next_state(self._system).verify():
-                self._current_state = next_state
-            else:
-                raise TransitionError("Move from state %r to state %r has failed" % (self._current_state, next_state))
+            self._do_transition(self._current_state.transition_map[next_state], next_state)
