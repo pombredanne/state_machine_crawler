@@ -168,16 +168,8 @@ def _create_transition_map(initial_transition):
     the_map = _create_transition_map_partial(initial_state)
     for source_state, target_states in the_map.iteritems():
         target_states.add(initial_state)
-
-        init = initial_state
-        src = source_state
-
-        class TransientInitialTransiton(initial_transition):
-            source_state = src
-            target_state = init
-
         # TODO: find a way to avoid modifying the class property itself
-        source_state.transition_map[initial_state] = TransientInitialTransiton
+        source_state.transition_map[initial_state] = initial_transition
     return the_map
 
 

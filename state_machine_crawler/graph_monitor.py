@@ -112,6 +112,12 @@ class GraphViewer(object):
             pass
 
 
+def _equivalent(transition_one, transition_two):
+    one = inspect.isclass(transition_one) and inspect.isclass(transition_two) and \
+        issubclass(transition_one, transition_two)
+    return transition_one is transition_two or one
+
+
 class GraphMonitor(object):
     """ A Tkinter based monitor for StateMachineCrawler. Shows a Graphviz diagram with all the states and marks the
     current state of the system on the diagram.
@@ -149,6 +155,12 @@ class GraphMonitor(object):
     def _set_entry_point(self):
         source_node = pydot.Node("EntryPoint", label="+")
         source_node.set_shape("doublecircle")
+
+        if _equivalent(self.crawler._current_transition, self.crawler._initial_transition):
+            source_node.set_style("filled")
+            source_node.set_fillcolor("forestgreen")
+            source_node.set_fontcolor("white")
+
         self._graph.add_node(source_node)
 
     def _set_node(self, state, current_state, error_states):
@@ -174,12 +186,6 @@ class GraphMonitor(object):
             return
         edge = pydot.Edge(transition.source_state.__name__, transition.target_state.__name__)
 
-        def _equivalent(transition_one, transition_two):
-            one = inspect.isclass(transition_one) and inspect.isclass(transition_two) and \
-                issubclass(transition_one, transition_two) and \
-                transition_one.source_state is transition_two.source_state
-            return transition_one is transition_two or one
-
         if filter(lambda error_transition: _equivalent(transition, error_transition), error_transitions):
             color = "red"
         elif _equivalent(transition, current_transition):
@@ -187,8 +193,6 @@ class GraphMonitor(object):
         else:
             color = "black"
         edge.set_color(color)
-        if transition.__name__ == "TransientInitialTransiton":
-            edge.set_style("dashed")
         self._graph.add_edge(edge)
 
     def _gen_graph(self, source_state, cur_state, cur_transition, error_states, error_transitions):
