@@ -151,7 +151,7 @@ def _find_shortest_path(graph, start, end, path=[], get_cost=_get_cost):
     return shortest
 
 
-def _create_transition_map(state, state_map=None):
+def _create_transition_map_partial(state, state_map=None):
     """ Returns a graph for state transitioning """
     state_map = state_map or {}
     if state in state_map:
@@ -159,8 +159,15 @@ def _create_transition_map(state, state_map=None):
     state_map[state] = set()
     for next_state in state.transition_map.keys():
         state_map[state].add(next_state)
-        _create_transition_map(next_state, state_map)
+        _create_transition_map_partial(next_state, state_map)
     return state_map
+
+
+def _create_transition_map(initial_state):
+    the_map = _create_transition_map_partial(initial_state)
+    for target_states in the_map.itervalues():
+        target_states.add(initial_state)
+    return the_map
 
 
 class StateMachineCrawler(object):
@@ -202,28 +209,19 @@ class StateMachineCrawler(object):
         return instance
 
     def __init__(self, system, initial_transition):
+        if not (isclass(initial_transition) and issubclass(initial_transition, Transition)):
+            raise DeclarationError("initial_transition must be a Transition subclass")
+        if initial_transition.target_state is None:
+            raise DeclarationError("Initial transition has no target state")
+
         self._system = system
         self._current_state = self._current_transition = None
         self._error_state = self._error_transition = None  # placeholders for the classes that caused transition failure
-        if not (isclass(initial_transition) and issubclass(initial_transition, Transition)):
-            raise DeclarationError("initial_transition must be a Transition subclass")
         self._initial_transition = initial_transition
         self._initial_state = initial_transition.target_state
-        self._state_graph = self._init_state_graph()
+        self._state_graph = _create_transition_map(initial_transition.target_state)
         self._on_state_change = lambda: None
         LOG.info("State machine crawler initialized")
-
-    def _init_state_graph(self):
-        initial_state = self._initial_transition.target_state
-        if initial_state is None:
-            raise DeclarationError("Initial transition has no target state")
-        state_graph = _create_transition_map(initial_state)
-        for source_state, target_states in state_graph.iteritems():
-            target_states.add(initial_state)
-            if source_state == initial_state:
-                continue
-            source_state.transition_map[initial_state] = self._initial_transition
-        return state_graph
 
     @property
     def state(self):
@@ -234,26 +232,32 @@ class StateMachineCrawler(object):
         raise TransitionError("Move from state %r to state %r has failed: %s" % (self._current_state,
                                                                                  target_state, msg))
 
-    def _do_transition(self, transition, next_state):
+    def _do_step(self, next_state):
+        if next_state is self._initial_state:
+            transition = self._initial_transition
+        else:
+            transition = self._current_state.transition_map[next_state]
         self._current_transition = transition
         try:
             LOG.info("Transition to state %s started", next_state)
             transition(self._system).move()
             LOG.info("Transition to state %s finished", next_state)
-            self._on_state_change()
+            transition_ok = True
         except:
             self._error_transition = transition
             LOG.exception("Failed to move to: %s", next_state)
-            self._on_state_change()
+            transition_ok = False
+        self._on_state_change()
+        if not transition_ok:
             self._err(next_state, "transition failure")
         try:
             LOG.info("Verification of state %s started", next_state)
-            ok = next_state(self._system).verify()
+            verification_ok = next_state(self._system).verify()
             LOG.info("Verification of state %s finished", next_state)
         except:
             LOG.exception("Failed to verify transition to: %s" % next_state)
-            ok = False
-        if ok:
+            verification_ok = False
+        if verification_ok:
             self._current_state = next_state
             LOG.info("State changed to %s", next_state)
             self._on_state_change()
@@ -278,7 +282,7 @@ class StateMachineCrawler(object):
         True
         """
         if state is self._initial_state or self._current_state is None:
-            self._do_transition(self._initial_transition, self._initial_state)
+            self._do_step(self._initial_state)
             if state is self._initial_state:
                 return
         shortest_path = _find_shortest_path(self._state_graph, self._current_state, state)
@@ -289,4 +293,4 @@ class StateMachineCrawler(object):
         else:
             next_states = shortest_path[1:]
         for next_state in next_states:
-            self._do_transition(self._current_state.transition_map[next_state], next_state)
+            self._do_step(next_state)

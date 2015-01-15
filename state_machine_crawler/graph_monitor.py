@@ -1,4 +1,5 @@
 import threading
+import inspect
 import os
 from Tkinter import PhotoImage, Tk, Canvas, VERTICAL, HORIZONTAL, BOTTOM, RIGHT, LEFT, Y, X, BOTH, Scrollbar, NW, \
     CURRENT
@@ -166,17 +167,38 @@ class GraphMonitor(object):
         if not transition.source_state:
             return
         edge = pydot.Edge(transition.source_state.__name__, transition.target_state.__name__)
-        if transition is error_transition:
+
+        def _eqivalent(transition_one, transition_two):
+            one = inspect.isclass(transition_one) and inspect.isclass(transition_two) and \
+                issubclass(transition_one, transition_two) and \
+                transition.source_state is self.crawler._current_state
+            return transition_one is transition_two or one
+
+        if _eqivalent(transition, error_transition):
             color = "red"
-        elif transition is current_transition:
+        elif _eqivalent(transition, current_transition):
             color = "forestgreen"
         else:
             color = "black"
         edge.set_color(color)
+        if transition.__name__ == "TransientInitialTransiton":
+            edge.set_style("dashed")
         self._graph.add_edge(edge)
 
     def _gen_graph(self, source_state, cur_state, cur_transition, error_state, error_transition):
-        for target_state, transition in source_state.transition_map.iteritems():
+        cr = self.crawler
+        src = source_state
+        items = source_state.transition_map.items()
+
+        if source_state not in self._processed_states:
+            class TransientInitialTransiton(cr._initial_transition):
+                source_state = src
+                target_state = cr._initial_state
+
+            items += [(cr._initial_state, TransientInitialTransiton)]
+            self._processed_states.add(source_state)
+
+        for target_state, transition in items:
             if transition in self._processed_transitions:
                 continue
             self._processed_transitions.add(transition)
@@ -186,6 +208,7 @@ class GraphMonitor(object):
 
     def _save(self):
         self._processed_transitions = set()
+        self._processed_states = set()
         self._graph = pydot.Dot(self._title, graph_type='digraph')
         self._graph.set_splines("polyline")
         cr = self.crawler

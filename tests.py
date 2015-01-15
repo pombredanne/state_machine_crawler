@@ -83,12 +83,12 @@ class BaseFunctionsTest(unittest.TestCase):
 
     def test_create_transition_map(self):
         self.assertEqual(_create_transition_map(InitialState), {
-            InitialState: {StateOne},
-            StateOne: {StateTwo, StateOne},
-            StateTwo: {StateThreeVariantOne, StateThreeVariantTwo},
-            StateThreeVariantOne: {StateFour},
-            StateThreeVariantTwo: {StateFour},
-            StateFour: set()
+            InitialState: {StateOne, InitialState},
+            StateOne: {StateTwo, StateOne, InitialState},
+            StateTwo: {StateThreeVariantOne, StateThreeVariantTwo, InitialState},
+            StateThreeVariantOne: {StateFour, InitialState},
+            StateThreeVariantTwo: {StateFour, InitialState},
+            StateFour: {InitialState}
         })
 
     def test_find_shortest_path(self):
@@ -101,18 +101,20 @@ class TestStateMachineTransition(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.monitor = GraphMonitor("state-crawler-tests", None)
+        pass
+        #cls.monitor = GraphMonitor("state-crawler-tests", None)
 
     @classmethod
     def tearDownClass(cls):
-        cls.monitor.stop()
+        pass
+        #cls.monitor.stop()
 
     def setUp(self):
         self.target = mock.Mock()
         self.smc = StateMachineCrawler(self.target, InitialTransition)
-        self.monitor.crawler = self.smc
-        self.smc.set_on_state_change_handler(self.monitor)
-        self.monitor.start()
+        #self.monitor.crawler = self.smc
+        #self.smc.set_on_state_change_handler(self.monitor)
+        #self.monitor.start()
 
     def test_move(self):
         self.smc.move(StateFour)
