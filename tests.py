@@ -7,15 +7,14 @@ from state_machine_crawler import Transition, StateMachineCrawler, DeclarationEr
     State as BaseState, GraphMonitor
 from state_machine_crawler.state_machine_crawler import _create_transition_map, _find_shortest_path
 
-
-SLOW_MO = False  # set to True to see GUI monitor
+# set to time in seconds to configure duration of each transition and verification
+EXEC_TIME = 0.0
 
 
 class State(BaseState):
 
     def verify(self):
-        if SLOW_MO:
-            time.sleep(1)
+        time.sleep(EXEC_TIME)
         return self._system.ok()
 
 
@@ -27,24 +26,21 @@ class InitialTransition(Transition):
     target_state = InitialState
 
     def move(self):
-        if SLOW_MO:
-            time.sleep(1)
+        time.sleep(EXEC_TIME)
         self._system.enter()
 
 
 class UniqueTransition(Transition):
 
     def move(self):
-        if SLOW_MO:
-            time.sleep(1)
+        time.sleep(EXEC_TIME)
         self._system.unique()
 
 
 class NonUniqueTransition(Transition):
 
     def move(self):
-        if SLOW_MO:
-            time.sleep(1)
+        time.sleep(EXEC_TIME)
         self._system.non_unique()
 
 
@@ -59,8 +55,8 @@ class StateOne(State):
         target_state = "self"
 
         def move(self):
-            if SLOW_MO:
-                time.sleep(1)
+            time.sleep(EXEC_TIME)
+            1 / 0
             self._system.reset()
 
 
