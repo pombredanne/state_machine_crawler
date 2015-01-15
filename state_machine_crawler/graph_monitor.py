@@ -151,8 +151,14 @@ class GraphMonitor(object):
     def _set_node(self, state, current_state):
         source_node = pydot.Node(state.__name__)
         source_node.set_style("filled")
-        color = "red" if state is current_state else "white"
+        if state is current_state:
+            color = "forestgreen"
+            text_color = "white"
+        else:
+            color = "white"
+            text_color = "black"
         source_node.set_fillcolor(color)
+        source_node.set_fontcolor(text_color)
         source_node.set_shape("box")
         self._graph.add_node(source_node)
 
@@ -160,11 +166,14 @@ class GraphMonitor(object):
         if not transition.source_state:
             return
         edge = pydot.Edge(transition.source_state.__name__, transition.target_state.__name__)
-        style = "bold" if transition is self.crawler._initial_transition else "dashed"
-        color = "red" if transition is current_transition else "darkorchid4"
+        if transition is current_transition:
+            color = "forestgreen"
+            text_color = "forestgreen"
+        else:
+            color = "black"
+            text_color = "black"
         edge.set_color(color)
-        edge.set_style(style)
-        edge.set_fontcolor(color)
+        edge.set_fontcolor(text_color)
         edge.set_label(transition.__name__)
         self._graph.add_edge(edge)
 
