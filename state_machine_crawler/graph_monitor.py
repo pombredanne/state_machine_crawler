@@ -146,9 +146,15 @@ class GraphMonitor(object):
         else:
             return True
 
+    def _set_entry_point(self):
+        source_node = pydot.Node("EntryPoint", label="+")
+        source_node.set_shape("doublecircle")
+        self._graph.add_node(source_node)
+
     def _set_node(self, state, current_state, error_state):
         source_node = pydot.Node(state.__name__)
         source_node.set_style("filled")
+
         if state is error_state:
             color = "red"
             text_color = "black"
@@ -171,7 +177,7 @@ class GraphMonitor(object):
         def _eqivalent(transition_one, transition_two):
             one = inspect.isclass(transition_one) and inspect.isclass(transition_two) and \
                 issubclass(transition_one, transition_two) and \
-                transition.source_state is self.crawler._current_state
+                transition_one.source_state is transition_two.source_state
             return transition_one is transition_two or one
 
         if _eqivalent(transition, error_transition):
@@ -186,17 +192,7 @@ class GraphMonitor(object):
         self._graph.add_edge(edge)
 
     def _gen_graph(self, source_state, cur_state, cur_transition, error_state, error_transition):
-        cr = self.crawler
-        src = source_state
         items = source_state.transition_map.items()
-
-        if source_state not in self._processed_states:
-            class TransientInitialTransiton(cr._initial_transition):
-                source_state = src
-                target_state = cr._initial_state
-
-            items += [(cr._initial_state, TransientInitialTransiton)]
-            self._processed_states.add(source_state)
 
         for target_state, transition in items:
             if transition in self._processed_transitions:
@@ -212,7 +208,8 @@ class GraphMonitor(object):
         self._graph = pydot.Dot(self._title, graph_type='digraph')
         self._graph.set_splines("polyline")
         cr = self.crawler
-        self._gen_graph(cr._initial_state, cr._current_state, cr._current_transition,
+        self._set_entry_point()
+        self._gen_graph(cr._entry_point, cr._current_state, cr._current_transition,
                         cr._error_state, cr._error_transition)
         self._graph.write_png(self._title + ".png")
 

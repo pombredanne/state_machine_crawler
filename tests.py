@@ -8,7 +8,7 @@ from state_machine_crawler import Transition, StateMachineCrawler, DeclarationEr
 from state_machine_crawler.state_machine_crawler import _create_transition_map, _find_shortest_path
 
 # set to time in seconds to configure duration of each transition and verification
-EXEC_TIME = 0.0
+EXEC_TIME = 0.5
 
 
 class State(BaseState):
@@ -82,17 +82,24 @@ class StateFour(State):
 class BaseFunctionsTest(unittest.TestCase):
 
     def test_create_transition_map(self):
-        self.assertEqual(_create_transition_map(InitialState), {
+
+        rval = {}
+        for key, value in _create_transition_map(InitialTransition).iteritems():
+            if key.__name__ == "EntryPoint":
+                continue
+            rval[key] = value
+
+        self.assertEqual({
             InitialState: {StateOne, InitialState},
             StateOne: {StateTwo, StateOne, InitialState},
             StateTwo: {StateThreeVariantOne, StateThreeVariantTwo, InitialState},
             StateThreeVariantOne: {StateFour, InitialState},
             StateThreeVariantTwo: {StateFour, InitialState},
             StateFour: {InitialState}
-        })
+        }, rval)
 
     def test_find_shortest_path(self):
-        graph = _create_transition_map(InitialState)
+        graph = _create_transition_map(InitialTransition)
         shortest_path = _find_shortest_path(graph, InitialState, StateFour)
         self.assertEqual(shortest_path, [InitialState, StateOne, StateTwo, StateThreeVariantTwo, StateFour])
 
@@ -101,20 +108,21 @@ class TestStateMachineTransition(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        pass
-        #cls.monitor = GraphMonitor("state-crawler-tests", None)
+        cls.monitor = GraphMonitor("state-crawler-tests", None)
+        cls.target = mock.Mock()
+        cls.smc = StateMachineCrawler(cls.target, InitialTransition)
+        cls.monitor.crawler = cls.smc
+        cls.smc.set_on_state_change_handler(cls.monitor)
+        cls.monitor.start()
 
     @classmethod
     def tearDownClass(cls):
-        pass
-        #cls.monitor.stop()
+        cls.monitor.stop()
 
     def setUp(self):
-        self.target = mock.Mock()
-        self.smc = StateMachineCrawler(self.target, InitialTransition)
-        #self.monitor.crawler = self.smc
-        #self.smc.set_on_state_change_handler(self.monitor)
-        #self.monitor.start()
+        self.target.reset_mock()
+        self.target.ok.return_value = True
+        self.smc.move(InitialState)
 
     def test_move(self):
         self.smc.move(StateFour)
@@ -123,8 +131,6 @@ class TestStateMachineTransition(unittest.TestCase):
         self.assertEqual(self.target.non_unique.call_count, 1)
 
     def test_sequential_moves(self):
-        self.assertIs(self.smc.state, None)
-        self.smc.move(InitialState)
         self.assertIs(self.smc.state, InitialState)
         self.smc.move(StateOne)
         self.assertIs(self.smc.state, StateOne)
@@ -154,7 +160,7 @@ class TestStateMachineTransition(unittest.TestCase):
 
     def test_initial_state_verification_failure(self):
         self.target.ok.return_value = False
-        self.assertRaisesRegexp(TransitionError, "Move from state None to state .+ has failed: verification failure",
+        self.assertRaisesRegexp(TransitionError, "Move from state .+ to state .+ has failed",
                                 self.smc.move, InitialState)
 
 

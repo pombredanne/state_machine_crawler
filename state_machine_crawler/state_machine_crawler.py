@@ -163,10 +163,21 @@ def _create_transition_map_partial(state, state_map=None):
     return state_map
 
 
-def _create_transition_map(initial_state):
+def _create_transition_map(initial_transition):
+    initial_state = initial_transition.target_state
     the_map = _create_transition_map_partial(initial_state)
-    for target_states in the_map.itervalues():
+    for source_state, target_states in the_map.iteritems():
         target_states.add(initial_state)
+
+        init = initial_state
+        src = source_state
+
+        class TransientInitialTransiton(initial_transition):
+            source_state = src
+            target_state = init
+
+        # TODO: find a way to avoid modifying the class property itself
+        source_state.transition_map[initial_state] = TransientInitialTransiton
     return the_map
 
 
@@ -195,8 +206,7 @@ class StateMachineCrawler(object):
         for state in instance._state_graph:
             if not state(system).verify():
                 continue
-            shortest_path = _find_shortest_path(instance._state_graph, initial_transition.target_state, state,
-                                                get_cost=len)
+            shortest_path = _find_shortest_path(instance._state_graph, instance._current_state, state, get_cost=len)
             distance = len(shortest_path)
             if distance > longest_distance:
                 longest_distance = distance
@@ -215,11 +225,23 @@ class StateMachineCrawler(object):
             raise DeclarationError("Initial transition has no target state")
 
         self._system = system
-        self._current_state = self._current_transition = None
+        self._current_transition = None
         self._error_state = self._error_transition = None  # placeholders for the classes that caused transition failure
         self._initial_transition = initial_transition
         self._initial_state = initial_transition.target_state
-        self._state_graph = _create_transition_map(initial_transition.target_state)
+        self._state_graph = _create_transition_map(initial_transition)
+
+        class EntryPoint(State):
+
+            def verify(self):
+                return True
+
+            class initialize(initial_transition):
+                pass
+
+        self._state_graph[EntryPoint] = {self._initial_state}
+        self._current_state = self._entry_point = EntryPoint
+
         self._on_state_change = lambda: None
         LOG.info("State machine crawler initialized")
 
@@ -233,11 +255,7 @@ class StateMachineCrawler(object):
                                                                                  target_state, msg))
 
     def _do_step(self, next_state):
-        if next_state is self._initial_state:
-            transition = self._initial_transition
-        else:
-            transition = self._current_state.transition_map[next_state]
-        self._current_transition = transition
+        self._current_transition = transition = self._current_state.transition_map[next_state]
         try:
             LOG.info("Transition to state %s started", next_state)
             transition(self._system).move()
@@ -281,10 +299,6 @@ class StateMachineCrawler(object):
         >>> scm.state is StateOne
         True
         """
-        if state is self._initial_state or self._current_state is None:
-            self._do_step(self._initial_state)
-            if state is self._initial_state:
-                return
         shortest_path = _find_shortest_path(self._state_graph, self._current_state, state)
         if shortest_path is None:
             raise TransitionError("There is no way to achieve state %r" % state)
