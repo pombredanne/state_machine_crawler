@@ -214,7 +214,7 @@ class StateMachineCrawler(object):
         if not (isclass(initial_transition) and issubclass(initial_transition, Transition)):
             raise DeclarationError("initial_transition must be a Transition subclass")
         if initial_transition.target_state is None:
-            raise DeclarationError("Initial transition has no target state")
+            raise DeclarationError("initial transition has no target state")
 
         self._system = system
         self._current_transition = None
@@ -282,7 +282,7 @@ class StateMachineCrawler(object):
             self._current_state = self._entry_point
             self._err(next_state, "verification failure")
 
-    def set_on_state_change_handler(self, handler):
+    def set_on_state_change_handler(self, handler): # pragma: no cover
         self._on_state_change = handler
 
     def move(self, state):

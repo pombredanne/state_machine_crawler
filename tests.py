@@ -4,7 +4,10 @@ import mock
 
 from state_machine_crawler import Transition, StateMachineCrawler, DeclarationError, TransitionError, \
     State as BaseState
-from state_machine_crawler.state_machine_crawler import _create_transition_map, _find_shortest_path
+from state_machine_crawler.state_machine_crawler import _create_transition_map, _find_shortest_path, LOG
+
+
+LOG.handlers = []
 
 
 class State(BaseState):
@@ -94,6 +97,11 @@ class BaseFunctionsTest(unittest.TestCase):
         shortest_path = _find_shortest_path(graph, InitialState, StateFour)
         self.assertEqual(shortest_path, [InitialState, StateOne, StateTwo, StateThreeVariantTwo, StateFour])
 
+    def test_unknown_state(self):
+        graph = _create_transition_map(InitialTransition)
+        shortest_path = _find_shortest_path(graph, UnknownState, StateFour)
+        self.assertIs(shortest_path, None)
+
 
 class BaseTestStateMachineTransitionCase(unittest.TestCase):
 
@@ -154,6 +162,16 @@ class NegativeTestCases(unittest.TestCase):
         self.assertRaisesRegexp(TransitionError, "Move from state .+ to state .+ has failed",
                                 self.smc.move, InitialState)
 
+    def test_move_error(self):
+        self.target.enter.side_effect = Exception
+        self.assertRaisesRegexp(TransitionError, "Move from state .+ to state .+ has failed",
+                                self.smc.move, InitialState)
+
+    def test_verification_error(self):
+        self.target.ok.side_effect = Exception
+        self.assertRaisesRegexp(TransitionError, "Move from state .+ to state .+ has failed",
+                                self.smc.move, InitialState)
+
 
 class TestStateMachineDeclaration(unittest.TestCase):
 
@@ -198,6 +216,22 @@ class TestStateMachineDeclaration(unittest.TestCase):
 
                 def move(self):
                     pass
+
+    def test_initial_transition_without_target_state(self):
+
+        class PlainState(BaseState):
+
+            def verify(self):
+                return True
+
+        class NormalTransition(Transition):
+            source_state = PlainState
+
+            def move(self):
+                pass
+
+        self.assertRaisesRegexp(DeclarationError, "initial transition has no target state",
+                                StateMachineCrawler, None, NormalTransition)
 
 
 class TestStateMachineWithStateAutoconfig(unittest.TestCase):
