@@ -66,6 +66,7 @@ Always create your own feature branches from the **dev** branch. Not from **mast
 
 ## Commits
 
-1. Make sure that all commits that touched the source have MAJOR, MINOR or PATCH prefix to simplify changelog
-   management. Changes that did not involve source code modification should not be annotated with any prefix.
+1. Make sure that all commits that affected the source have got "1: ", "2: " or "3: " prefix (for MAJOR, MINOR or PATCH
+changes respectively) to simplify changelog management. Changes that did not involve source code modification should not
+be annotated with any prefix.
 2. Commits should be easily revertible - each commit is a logical change that DOES NOT break anything
