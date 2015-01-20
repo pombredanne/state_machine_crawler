@@ -1,20 +1,15 @@
 import unittest
-import time
 
 import mock
 
 from state_machine_crawler import Transition, StateMachineCrawler, DeclarationError, TransitionError, \
-    State as BaseState, GraphMonitor
+    State as BaseState
 from state_machine_crawler.state_machine_crawler import _create_transition_map, _find_shortest_path
-
-# set to time in seconds to configure duration of each transition and verification
-EXEC_TIME = 0.0
 
 
 class State(BaseState):
 
     def verify(self):
-        time.sleep(EXEC_TIME)
         return self._system.ok()
 
 
@@ -26,21 +21,18 @@ class InitialTransition(Transition):
     target_state = InitialState
 
     def move(self):
-        time.sleep(EXEC_TIME)
         self._system.enter()
 
 
 class UniqueTransition(Transition):
 
     def move(self):
-        time.sleep(EXEC_TIME)
         self._system.unique()
 
 
 class NonUniqueTransition(Transition):
 
     def move(self):
-        time.sleep(EXEC_TIME)
         self._system.non_unique()
 
 
@@ -55,7 +47,6 @@ class StateOne(State):
         target_state = "self"
 
         def move(self):
-            time.sleep(EXEC_TIME)
             self._system.reset()
 
 
@@ -110,16 +101,6 @@ class BaseTestStateMachineTransitionCase(unittest.TestCase):
     def setUpClass(cls):
         cls.target = mock.Mock()
         cls.smc = StateMachineCrawler(cls.target, InitialTransition)
-        if EXEC_TIME:
-            cls.monitor = GraphMonitor("state-crawler-tests", None)
-            cls.monitor.crawler = cls.smc
-            cls.smc.set_on_state_change_handler(cls.monitor)
-            cls.monitor.start()
-
-    @classmethod
-    def tearDownClass(cls):
-        if EXEC_TIME:
-            cls.monitor.stop()
 
 
 class PositiveTestStateMachineTransitionTest(BaseTestStateMachineTransitionCase):
