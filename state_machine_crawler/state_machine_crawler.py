@@ -161,16 +161,22 @@ def _create_transition_map(initial_transition):
     return the_map
 
 
-def _create_transition_map_with_exclusions(graph, entry_point, exclusion_list=None, filtered_graph=None):
+def _create_transition_map_with_exclusions(graph, entry_point, state_exclusion_list=None,
+                                           transition_exclusion_list=None,
+                                           filtered_graph=None):
     filtered_graph = filtered_graph or {}
-    exclusion_list = exclusion_list or []
-    if entry_point in exclusion_list:
+    state_exclusion_list = state_exclusion_list or []
+    transition_exclusion_list = transition_exclusion_list or []
+    if entry_point in state_exclusion_list:
         return {}
     if entry_point in filtered_graph or entry_point not in graph:
         return filtered_graph
     filtered_graph[entry_point] = filtered_children = set()
     for child_node in graph[entry_point]:
-        if _create_transition_map_with_exclusions(graph, child_node, exclusion_list, filtered_graph):
+        if (entry_point, child_node) in transition_exclusion_list:
+            continue
+        if _create_transition_map_with_exclusions(graph, child_node, state_exclusion_list, transition_exclusion_list,
+                                                  filtered_graph):
             filtered_children.add(child_node)
     return filtered_graph
 
@@ -196,6 +202,12 @@ def _get_missing_nodes(graph, sub_graph, entry_point):
     _remove_nodes(entry_point)
 
     return all_nodes
+
+
+def _get_all_unreachable_nodes(graph, entry_point, state_exclusion_list, transition_exclusion_list):
+    sub_graph = _create_transition_map_with_exclusions(graph, entry_point, state_exclusion_list,
+                                                       transition_exclusion_list)
+    return _get_missing_nodes(graph, sub_graph, entry_point)
 
 
 class StateMachineCrawler(object):
@@ -275,7 +287,9 @@ class StateMachineCrawler(object):
             LOG.info("State changed to %s", next_state)
             self._on_state_change()
         else:
-            self._error_states.add(next_state)
+            self._error_states = _get_all_unreachable_nodes(self._state_graph, self._entry_point,
+                                                            set.union(self._error_states, {next_state}),
+                                                            self._transition_exclusion_list)
             LOG.error("State verification error for: %s", next_state)
             self._on_state_change()
             self._current_state = self._entry_point
@@ -289,6 +303,13 @@ class StateMachineCrawler(object):
             return self._initial_transition
         else:
             return source_state.transition_map[target_state]
+
+    @property
+    def _transition_exclusion_list(self):
+        transition_exclusion_list = set()
+        for transition in self._error_transitions:
+            transition_exclusion_list.add((transition.source_state, transition.target_state))
+        return transition_exclusion_list
 
     def _get_cost(self, states):
         """ Returns a cumulative cost of the whole chain of transitions """
@@ -309,7 +330,11 @@ class StateMachineCrawler(object):
         >>> scm.state is StateOne
         True
         """
-        shortest_path = _find_shortest_path(self._state_graph, self._current_state, state, get_cost=self._get_cost)
+        reachable_state_graph = _create_transition_map_with_exclusions(self._state_graph,
+                                                                       self._entry_point,
+                                                                       self._error_states,
+                                                                       self._transition_exclusion_list)
+        shortest_path = _find_shortest_path(reachable_state_graph, self._current_state, state, get_cost=self._get_cost)
         if shortest_path is None:
             raise TransitionError("There is no way to achieve state %r" % state)
         if state is self._current_state:

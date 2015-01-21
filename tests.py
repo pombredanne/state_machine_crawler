@@ -92,7 +92,7 @@ class BaseFunctionsTest(unittest.TestCase):
             StateFour: {InitialState}
         }, rval)
 
-    def test_create_transition_map_with_exclusions(self):
+    def test_create_transition_map_with_state_exclusions(self):
         graph = {
             0: {1, 2, 3},
             1: {4, 5},
@@ -111,6 +111,27 @@ class BaseFunctionsTest(unittest.TestCase):
 
         self.assertEqual(_create_transition_map_with_exclusions(graph, 0, exclusion_list), filtered_graph)
         self.assertEqual(_get_missing_nodes(graph, filtered_graph, 0), {1, 2, 4, 5, 9})
+
+    def test_create_transition_map_with_transition_exclusions(self):
+        graph = {
+            0: {1, 2, 3},
+            1: {4, 5},
+            2: {6, 9},
+            3: {6},
+            6: {7, 8}
+        }
+
+        exclusion_list = [(0, 1), (0, 3), (2, 9)]
+
+        filtered_graph = {
+            0: {2},
+            2: {6},
+            6: {7, 8}
+        }
+
+        self.assertEqual(_create_transition_map_with_exclusions(graph, 0, transition_exclusion_list=exclusion_list),
+                         filtered_graph)
+        self.assertEqual(_get_missing_nodes(graph, filtered_graph, 0), {1, 3, 4, 5, 9})
 
     def test_find_shortest_path(self):
         graph = _create_transition_map(InitialTransition)
