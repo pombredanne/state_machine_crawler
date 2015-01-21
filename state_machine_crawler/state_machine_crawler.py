@@ -121,17 +121,7 @@ class State(object):
         """ Checks if the system ended up in a desired state. Should return a boolean. """
 
 
-def _get_cost(states):
-    """ Returns a cumulative cost of the whole chain of transitions """
-    cost = 0
-    cursor = states[0]
-    for state in states[1:]:
-        cost += cursor.transition_map[state].cost
-        cursor = state
-    return cost
-
-
-def _find_shortest_path(graph, start, end, path=[], get_cost=_get_cost):
+def _find_shortest_path(graph, start, end, path=[], get_cost=len):
     """ Derived from `here <https://www.python.org/doc/essays/graphs/>`_
 
     Finds the shortest path between two states. Estimations are based on a sum of costs of all transitions.
@@ -168,8 +158,6 @@ def _create_transition_map(initial_transition):
     the_map = _create_transition_map_partial(initial_state)
     for source_state, target_states in the_map.iteritems():
         target_states.add(initial_state)
-        # TODO: find a way to avoid modifying the class property itself
-        source_state.transition_map[initial_state] = initial_transition
     return the_map
 
 
@@ -198,7 +186,7 @@ class StateMachineCrawler(object):
         for state in instance._state_graph:
             if not state(system).verify():
                 continue
-            shortest_path = _find_shortest_path(instance._state_graph, instance._current_state, state, get_cost=len)
+            shortest_path = _find_shortest_path(instance._state_graph, instance._current_state, state)
             distance = len(shortest_path)
             if distance > longest_distance:
                 longest_distance = distance
@@ -249,7 +237,7 @@ class StateMachineCrawler(object):
                                                                                  target_state, msg))
 
     def _do_step(self, next_state):
-        self._current_transition = transition = self._current_state.transition_map[next_state]
+        self._current_transition = transition = self._get_transition(self._current_state, next_state)
         self._on_state_change()
         try:
             LOG.info("Transition to state %s started", next_state)
@@ -285,6 +273,21 @@ class StateMachineCrawler(object):
     def set_on_state_change_handler(self, handler):  # pragma: no cover
         self._on_state_change = handler
 
+    def _get_transition(self, source_state, target_state):
+        if target_state is self._initial_state:
+            return self._initial_transition
+        else:
+            return source_state.transition_map[target_state]
+
+    def _get_cost(self, states):
+        """ Returns a cumulative cost of the whole chain of transitions """
+        cost = 0
+        cursor = states[0]
+        for state in states[1:]:
+            cost += self._get_transition(cursor, state).cost
+            cursor = state
+        return cost
+
     def move(self, state):
         """ Performs a transition from the current state to the state passed as an argument
 
@@ -295,7 +298,7 @@ class StateMachineCrawler(object):
         >>> scm.state is StateOne
         True
         """
-        shortest_path = _find_shortest_path(self._state_graph, self._current_state, state)
+        shortest_path = _find_shortest_path(self._state_graph, self._current_state, state, get_cost=self._get_cost)
         if shortest_path is None:
             raise TransitionError("There is no way to achieve state %r" % state)
         if state is self._current_state:
