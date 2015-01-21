@@ -301,9 +301,6 @@ class StateMachineCrawler(object):
             self._current_state = self._entry_point
             self._err(next_state, "verification failure")
 
-    def set_on_state_change_handler(self, handler):  # pragma: no cover
-        self._on_state_change = handler
-
     def _get_transition(self, source_state, target_state):
         if target_state is self._initial_state:
             return self._initial_transition

@@ -18,7 +18,6 @@ setup(
     setup_requires=["nose"],
     tests_require=["mock", "coverage"],
     test_suite='nose.collector',
-    install_requires=["pydot2"],
     author="Anton Berezin",
     author_email="gurunars@gmail.com"
 )

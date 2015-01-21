@@ -2,9 +2,6 @@ language: python
 python:
 - '2.7'
 script: ./setup.py nosetests
-before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -y python-tk
 branches:
   only:
     - master
