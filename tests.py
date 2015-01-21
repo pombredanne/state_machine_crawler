@@ -212,10 +212,12 @@ class NegativeTestCases(unittest.TestCase):
         self.assertRaisesRegexp(TransitionError, "Move from state .+ to state .+ has failed",
                                 self.smc.move, InitialState)
 
-    def test_move_error(self):
+    def test_initial_move_error(self):
         self.target.enter.side_effect = Exception
         self.assertRaisesRegexp(TransitionError, "Move from state .+ to state .+ has failed",
                                 self.smc.move, InitialState)
+        self.assertRaisesRegexp(TransitionError, "Move from state .+ to state .+ has failed",
+                                self.smc.move, StateOne)
 
     def test_verification_error(self):
         self.target.ok.side_effect = Exception

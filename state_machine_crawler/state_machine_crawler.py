@@ -238,7 +238,7 @@ class StateMachineCrawler(object):
 
         class EntryPoint(State):
 
-            def verify(self):
+            def verify(self):  # pragma: no cover
                 return True
 
             class Initialize(initial_transition):
