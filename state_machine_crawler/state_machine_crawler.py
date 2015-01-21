@@ -146,9 +146,9 @@ def _create_transition_map_partial(state, state_map=None):
     state_map = state_map or {}
     if state in state_map:
         return state_map
-    state_map[state] = set()
+    state_map[state] = child_states = set()
     for next_state in state.transition_map.keys():
-        state_map[state].add(next_state)
+        child_states.add(next_state)
         _create_transition_map_partial(next_state, state_map)
     return state_map
 
@@ -159,6 +159,20 @@ def _create_transition_map(initial_transition):
     for source_state, target_states in the_map.iteritems():
         target_states.add(initial_state)
     return the_map
+
+
+def _create_transition_map_with_exclusions(graph, entry_point, exclusion_list=None, filtered_graph=None):
+    filtered_graph = filtered_graph or {}
+    exclusion_list = exclusion_list or []
+    if entry_point in exclusion_list:
+        return {}
+    if entry_point in filtered_graph or entry_point not in graph:
+        return filtered_graph
+    filtered_graph[entry_point] = filtered_children = set()
+    for child_node in graph[entry_point]:
+        if _create_transition_map_with_exclusions(graph, child_node, exclusion_list, filtered_graph):
+            filtered_children.add(child_node)
+    return filtered_graph
 
 
 class StateMachineCrawler(object):

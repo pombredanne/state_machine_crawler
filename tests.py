@@ -4,8 +4,8 @@ import mock
 
 from state_machine_crawler import Transition, StateMachineCrawler, DeclarationError, TransitionError, \
     State as BaseState
-from state_machine_crawler.state_machine_crawler import _create_transition_map, _find_shortest_path, LOG
-
+from state_machine_crawler.state_machine_crawler import _create_transition_map, _find_shortest_path, LOG, \
+    _create_transition_map_with_exclusions
 
 LOG.handlers = []
 
@@ -92,9 +92,37 @@ class BaseFunctionsTest(unittest.TestCase):
             StateFour: {InitialState}
         }, rval)
 
+    def test_create_transition_map_with_exclusions(self):
+        graph = {
+            0: {1, 2, 3},
+            1: {4, 5},
+            2: {6, 9},
+            3: {6},
+            6: {7, 8}
+        }
+
+        exclusion_list = [1, 2]
+
+        filtered_graph = {
+            0: {3},
+            3: {6},
+            6: {7, 8}
+        }
+
+        self.assertEqual(_create_transition_map_with_exclusions(graph, 0, exclusion_list), filtered_graph)
+
     def test_find_shortest_path(self):
         graph = _create_transition_map(InitialTransition)
-        shortest_path = _find_shortest_path(graph, InitialState, StateFour)
+
+        def get_cost(states):
+            cost = 0
+            cursor = states[0]
+            for state in states[1:]:
+                cost += cursor.transition_map[state].cost
+                cursor = state
+            return cost
+
+        shortest_path = _find_shortest_path(graph, InitialState, StateFour, get_cost=get_cost)
         self.assertEqual(shortest_path, [InitialState, StateOne, StateTwo, StateThreeVariantTwo, StateFour])
 
     def test_unknown_state(self):
