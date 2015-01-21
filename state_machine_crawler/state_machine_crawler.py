@@ -207,33 +207,7 @@ class StateMachineCrawler(object):
         The first transition to be executed to move to the initial state
 
     >>> scm = StateMachineCrawler(system_object, CustomIntialTransition)
-
-    or
-
-    >>> scm = StateMachineCrawler.create(system_object, CustomIntialTransition)
     """
-
-    @classmethod
-    def create(cls, system, initial_transition):
-        """ Instanciates and returns the crawler with a state that mostly resembles the one the *_system* is in.
-        The state does not necessarily have to be the initial one."""
-        instance = cls(system, initial_transition)
-        longest_distance = 0
-        current_state = None
-        for state in instance._state_graph:
-            if not state(system).verify():
-                continue
-            shortest_path = _find_shortest_path(instance._state_graph, instance._current_state, state)
-            distance = len(shortest_path)
-            if distance > longest_distance:
-                longest_distance = distance
-                current_state = state
-            elif distance < longest_distance:
-                pass
-            else:
-                raise TransitionError("States %r and %r satisfy system's condition" % (current_state, state))
-        instance._current_state = current_state
-        return instance
 
     def __init__(self, system, initial_transition):
         if not (isclass(initial_transition) and issubclass(initial_transition, Transition)):
