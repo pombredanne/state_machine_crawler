@@ -5,6 +5,10 @@ script: ./setup.py nosetests
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -y python-tk
+branches:
+  only:
+    - master
+    - dev
 deploy:
   provider: pypi
   user: gurunars
