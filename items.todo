@@ -1,0 +1,10 @@
+ ☐ implement state machine's __repr__ method to return .dot representation
+     ☐ mark error transitions/states as red
+     ☐ mark current states/transitions as green
+     ☐ use subgraphs for all states in separate modules
+ ☐ design urls for the web viewer
+     ☐ show the big picture
+     ☐ show details of failures on hover
+     ☐ show state descriptions on hover
+     ☐ show log in a pane
+     ☐ show status completion bar

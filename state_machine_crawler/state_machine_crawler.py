@@ -346,3 +346,7 @@ class StateMachineCrawler(object):
             next_states = shortest_path[1:]
         for next_state in next_states:
             self._do_step(next_state)
+
+    def __repr__(self):
+        # TODO: implement .dot graph generation here without pydot dependency
+        pass
