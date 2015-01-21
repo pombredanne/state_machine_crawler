@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import os
 
 from setuptools import setup, find_packages
@@ -14,6 +15,9 @@ setup(
     description="A library for following automata based programming model.",
     version=version,
     packages=find_packages(),
+    setup_requires=["nose"],
+    tests_require=["mock", "coverage"],
+    test_suite='nose.collector',
     install_requires=["pydot2"],
     author="Anton Berezin",
     author_email="gurunars@gmail.com"

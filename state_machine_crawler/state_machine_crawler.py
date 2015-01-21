@@ -230,7 +230,7 @@ class StateMachineCrawler(object):
             def verify(self):
                 return True
 
-            class initialize(initial_transition):
+            class Initialize(initial_transition):
                 pass
 
         self._state_graph[EntryPoint] = {self._initial_state}
@@ -282,7 +282,7 @@ class StateMachineCrawler(object):
             self._current_state = self._entry_point
             self._err(next_state, "verification failure")
 
-    def set_on_state_change_handler(self, handler): # pragma: no cover
+    def set_on_state_change_handler(self, handler):  # pragma: no cover
         self._on_state_change = handler
 
     def move(self, state):

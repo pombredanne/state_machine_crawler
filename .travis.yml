@@ -1,9 +1,7 @@
 language: python
 python:
 - '2.7'
-script: nosetests --with-coverage --cover-package=state_machine_crawler.state_machine_crawler --cover-min-percentage=100 -v
-install:
-  - "pip install nose coverage mock ."
+script: ./setup.py nosetests
 deploy:
   provider: pypi
   user: gurunars
