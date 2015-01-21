@@ -290,6 +290,12 @@ class StateMachineCrawler(object):
             self._error_states = _get_all_unreachable_nodes(self._state_graph, self._entry_point,
                                                             set.union(self._error_states, {next_state}),
                                                             self._transition_exclusion_list)
+
+            # mark all outgoing transitions from error states as impossible
+            for state in self._error_states:
+                for transition in state.transition_map.itervalues():
+                    self._error_transitions.add(transition)
+
             LOG.error("State verification error for: %s", next_state)
             self._on_state_change()
             self._current_state = self._entry_point
