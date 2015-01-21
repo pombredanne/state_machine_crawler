@@ -175,6 +175,29 @@ def _create_transition_map_with_exclusions(graph, entry_point, exclusion_list=No
     return filtered_graph
 
 
+def _get_missing_nodes(graph, sub_graph, entry_point):
+    all_nodes = set()
+
+    def _add_nodes(parent):
+        if parent in all_nodes:
+            return
+        all_nodes.add(parent)
+        for child in graph.get(parent, []):
+            _add_nodes(child)
+
+    def _remove_nodes(parent):
+        if parent not in all_nodes:
+            return
+        all_nodes.remove(parent)
+        for child in sub_graph.get(parent, []):
+            _remove_nodes(child)
+
+    _add_nodes(entry_point)
+    _remove_nodes(entry_point)
+
+    return all_nodes
+
+
 class StateMachineCrawler(object):
     """ The crawler is responsible for orchestrating the transitions of system's states
 

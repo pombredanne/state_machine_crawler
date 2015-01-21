@@ -5,7 +5,7 @@ import mock
 from state_machine_crawler import Transition, StateMachineCrawler, DeclarationError, TransitionError, \
     State as BaseState
 from state_machine_crawler.state_machine_crawler import _create_transition_map, _find_shortest_path, LOG, \
-    _create_transition_map_with_exclusions
+    _create_transition_map_with_exclusions, _get_missing_nodes
 
 LOG.handlers = []
 
@@ -110,6 +110,7 @@ class BaseFunctionsTest(unittest.TestCase):
         }
 
         self.assertEqual(_create_transition_map_with_exclusions(graph, 0, exclusion_list), filtered_graph)
+        self.assertEqual(_get_missing_nodes(graph, filtered_graph, 0), {1, 2, 4, 5, 9})
 
     def test_find_shortest_path(self):
         graph = _create_transition_map(InitialTransition)
