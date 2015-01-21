@@ -3,3 +3,5 @@ dist
 *.pyc
 *.zip
 *.png
+*.egg
+.coverage
