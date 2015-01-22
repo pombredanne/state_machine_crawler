@@ -1,13 +1,16 @@
 import unittest
+import time
 
 import mock
 
 from state_machine_crawler import Transition, StateMachineCrawler, DeclarationError, TransitionError, \
-    State as BaseState
+    State as BaseState, WebView
 from state_machine_crawler.state_machine_crawler import _create_transition_map, _find_shortest_path, LOG, \
     _create_transition_map_with_exclusions, _get_missing_nodes
 
 LOG.handlers = []
+
+EXEC_TIME = 0.0
 
 
 DOT_GRAPH = """digraph StateMachine {
@@ -33,6 +36,7 @@ DOT_GRAPH = """digraph StateMachine {
 class State(BaseState):
 
     def verify(self):
+        time.sleep(EXEC_TIME)
         return self._system.ok()
 
 
@@ -44,18 +48,21 @@ class InitialTransition(Transition):
     target_state = InitialState
 
     def move(self):
+        time.sleep(EXEC_TIME)
         self._system.enter()
 
 
 class UniqueTransition(Transition):
 
     def move(self):
+        time.sleep(EXEC_TIME)
         self._system.unique()
 
 
 class NonUniqueTransition(Transition):
 
     def move(self):
+        time.sleep(EXEC_TIME)
         self._system.non_unique()
 
 
@@ -70,6 +77,7 @@ class StateOne(State):
         target_state = "self"
 
         def move(self):
+            time.sleep(EXEC_TIME)
             self._system.reset()
 
 
@@ -179,6 +187,14 @@ class BaseTestStateMachineTransitionCase(unittest.TestCase):
     def setUpClass(cls):
         cls.target = mock.Mock()
         cls.smc = StateMachineCrawler(cls.target, InitialTransition)
+        if EXEC_TIME:
+            cls.viewer = WebView(cls.smc)
+            cls.viewer.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        if EXEC_TIME:
+            cls.viewer.stop()
 
 
 class PositiveTestStateMachineTransitionTest(BaseTestStateMachineTransitionCase):

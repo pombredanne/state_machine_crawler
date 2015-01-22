@@ -17,7 +17,11 @@ setup(
     packages=find_packages(),
     setup_requires=["nose"],
     tests_require=["mock", "coverage"],
+    install_requires=["werkzeug"],
     test_suite='nose.collector',
     author="Anton Berezin",
-    author_email="gurunars@gmail.com"
+    author_email="gurunars@gmail.com",
+    data_files=[
+        ("/usr/share/state_machine_crawler", ["webview"])
+    ]
 )
