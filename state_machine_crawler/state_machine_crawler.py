@@ -10,6 +10,16 @@ ch.setFormatter(logging.Formatter("%(message)s"))
 
 LOG.addHandler(ch)
 
+NODE_TPL = "%(name)s [style=filled label=\"%(label)s\" shape=%(shape)s fillcolor=%(color)s fontcolor=%(text_color)s];"
+EDGE_TPL = "%(source)s -> %(target)s [color=%(color)s];"
+
+
+def _equivalent(transition_one, transition_two):
+    if transition_one is transition_two:
+        return True
+    else:
+        return isclass(transition_one) and isclass(transition_two) and issubclass(transition_one, transition_two)
+
 
 class StateMachineError(Exception):
     """ Base error to be raise by the toolkit """
@@ -347,6 +357,50 @@ class StateMachineCrawler(object):
         for next_state in next_states:
             self._do_step(next_state)
 
+    def _serialize_state(self, state):  # pragma: no cover
+        if state is self._entry_point:
+            shape = "doublecircle"
+            label = "+"
+        else:
+            shape = "box"
+            label = state.__name__
+        if state is self._current_state:
+            color = "forestgreen"
+            text_color = "white"
+        elif state in self._error_states:
+            color = "red"
+            text_color = "black"
+        else:
+            color = "white"
+            text_color = "black"
+        return NODE_TPL % dict(name=state.__name__, label=label, shape=shape, color=color, text_color=text_color)
+
+    def _serialize_transition(self, transition):  # pragma: no cover
+        if not transition.source_state:
+            return ""
+        if filter(lambda error_transition: _equivalent(transition, error_transition), self._error_transitions):
+            color = "red"
+        elif _equivalent(transition, self._current_transition):
+            color = "forestgreen"
+        else:
+            color = "black"
+        return EDGE_TPL % dict(source=transition.source_state.__name__,
+                               target=transition.target_state.__name__,
+                               color=color)
+
     def __repr__(self):
         # TODO: implement .dot graph generation here without pydot dependency
-        pass
+        all_states = set()
+        for source_state, target_states in self._state_graph.iteritems():
+            all_states.add(source_state)
+            for st in target_states:
+                all_states.add(st)
+
+        rval = ["digraph StateMachine {splines=polyline;"]
+        for state in all_states:
+            rval.append(self._serialize_state(state))
+            for transition in state.transition_map.itervalues():
+                rval.append(self._serialize_transition(transition))
+        rval.append("}")
+
+        return "".join(rval)

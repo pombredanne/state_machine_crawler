@@ -10,6 +10,26 @@ from state_machine_crawler.state_machine_crawler import _create_transition_map, 
 LOG.handlers = []
 
 
+DOT_GRAPH = """digraph StateMachine {
+    splines=polyline;
+    StateTwo [style=filled label="StateTwo" shape=box fillcolor=forestgreen fontcolor=white];
+    EntryPoint [style=filled label="+" shape=doublecircle fillcolor=white fontcolor=black];
+    StateThreeVariantOne [style=filled label="StateThreeVariantOne" shape=box fillcolor=white fontcolor=black];
+    StateThreeVariantTwo [style=filled label="StateThreeVariantTwo" shape=box fillcolor=white fontcolor=black];
+    StateFour [style=filled label="StateFour" shape=box fillcolor=white fontcolor=black];
+    StateOne [style=filled label="StateOne" shape=box fillcolor=white fontcolor=black];
+    InitialState [style=filled label="InitialState" shape=box fillcolor=white fontcolor=black];
+    StateTwo -> StateThreeVariantTwo [color=black];
+    StateTwo -> StateThreeVariantOne [color=black];
+    EntryPoint -> InitialState [color=black];
+    StateThreeVariantOne -> StateFour [color=black];
+    StateThreeVariantTwo -> StateFour [color=black];
+    StateOne -> StateTwo [color=forestgreen];
+    StateOne -> StateOne [color=black];
+    InitialState -> StateOne [color=black];
+}"""
+
+
 class State(BaseState):
 
     def verify(self):
@@ -284,3 +304,14 @@ class TestStateMachineDeclaration(unittest.TestCase):
 
         self.assertRaisesRegexp(DeclarationError, "initial transition has no target state",
                                 StateMachineCrawler, None, NormalTransition)
+
+
+class TestStateMachineSerialization(BaseTestStateMachineTransitionCase):
+
+    def test_repr(self):
+        self.smc.move(StateTwo)
+        value = repr(self.smc)
+        target_lines = DOT_GRAPH.replace("\n", "").replace("    ", "").split(";")
+        real_lines = value.split(";")
+        print value.replace(";", ";\n    ")
+        self.assertEqual(sorted(real_lines), sorted(target_lines))
