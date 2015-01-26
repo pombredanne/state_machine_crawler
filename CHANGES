@@ -1,4 +1,14 @@
-2.3.0 2015-01-13
+4.0.0 2015-01-26
+
+    [Anton Berezin <gurunars@gmail.com>]
+        * MINOR: added a webview
+        * MAJOR: got rid of TK based graphviewer
+        * MINOR: logging
+        * MINOR: added entry point
+        * MINOR: stopped modifying the classes themselves
+        * MAJOR: got rid of "create" method
+
+3.2.0 2015-01-13
 
     [Anton Berezin <gurunars@gmail.com>]
         * MINOR: Added graph visualization
