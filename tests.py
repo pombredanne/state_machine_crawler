@@ -6,7 +6,7 @@ import mock
 from state_machine_crawler import Transition, StateMachineCrawler, DeclarationError, TransitionError, \
     State as BaseState, WebView
 from state_machine_crawler.state_machine_crawler import _create_transition_map, _find_shortest_path, LOG, \
-    _create_transition_map_with_exclusions, _get_missing_nodes
+    _create_transition_map_with_exclusions, _get_missing_nodes, _dfs
 
 LOG.handlers = []
 
@@ -37,6 +37,7 @@ class State(BaseState):
 
     def verify(self):
         time.sleep(EXEC_TIME)
+        self._system.visited(self.__class__.__name__)
         return self._system.ok()
 
 
@@ -99,6 +100,11 @@ class StateThreeVariantTwo(State):
 class StateFour(State):
     from_v1 = NonUniqueTransition.link(source_state=StateThreeVariantOne)
     from_v2 = NonUniqueTransition.link(source_state=StateThreeVariantTwo)
+
+    def verify(self):
+        if not super(StateFour, self).verify():
+            return False
+        return bool(self._system.last_verify())
 
 
 class BaseFunctionsTest(unittest.TestCase):
@@ -180,6 +186,16 @@ class BaseFunctionsTest(unittest.TestCase):
         shortest_path = _find_shortest_path(graph, UnknownState, StateFour)
         self.assertIs(shortest_path, None)
 
+    def test_dfs(self):
+        graph = {"A": ["B", "C", "A"],
+                 "B": ["D", "E", "A"],
+                 "D": ["B", "A"],
+                 "E": ["B", "A"],
+                 "C": ["F", "G", "A"],
+                 "F": ["C", "A"],
+                 "G": ["C", "A"]}
+        self.assertEqual(_dfs(graph, "A"), set(['A', 'C', 'B', 'E', 'D', 'G', 'F']))
+
 
 class BaseTestStateMachineTransitionCase(unittest.TestCase):
 
@@ -231,6 +247,16 @@ class PositiveTestStateMachineTransitionTest(BaseTestStateMachineTransitionCase)
         self.smc.move(StateOne)
         self.assertEqual(self.target.reset.call_count, 1)
 
+    def test_all(self):
+        self.smc.verify_all_states()
+        visited_states = map(lambda item: item[0][0], self.target.visited.call_args_list)
+        self.assertEqual(set(visited_states),
+                         set(['StateTwo', 'StateThreeVariantOne', 'StateFour', 'InitialState', 'StateOne',
+                              'StateThreeVariantTwo']))
+
+    def tearDown(self):
+        self.target.reset_mock()
+
 
 class NegativeTestCases(unittest.TestCase):
 
@@ -259,6 +285,14 @@ class NegativeTestCases(unittest.TestCase):
         self.target.ok.side_effect = Exception
         self.assertRaisesRegexp(TransitionError, "Move from state .+ to state .+ has failed",
                                 self.smc.move, InitialState)
+
+    def test_not_all_reachable(self):
+        self.target.last_verify.return_value = False
+        self.assertRaisesRegexp(TransitionError, "Failed to visit the following states: %s" % StateFour,
+                                self.smc.verify_all_states)
+
+    def tearDown(self):
+        self.target.reset_mock()
 
 
 class TestStateMachineDeclaration(unittest.TestCase):

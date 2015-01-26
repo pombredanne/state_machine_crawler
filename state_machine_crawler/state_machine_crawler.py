@@ -174,6 +174,9 @@ def _create_transition_map(initial_transition):
 def _create_transition_map_with_exclusions(graph, entry_point, state_exclusion_list=None,
                                            transition_exclusion_list=None,
                                            filtered_graph=None):
+    """ Creates a sub_graph of a @graph with an assumption that a bunch of nodes from @state_exclusion_list are not
+    reachable
+    """
     filtered_graph = filtered_graph or {}
     state_exclusion_list = state_exclusion_list or []
     transition_exclusion_list = transition_exclusion_list or []
@@ -192,6 +195,7 @@ def _create_transition_map_with_exclusions(graph, entry_point, state_exclusion_l
 
 
 def _get_missing_nodes(graph, sub_graph, entry_point):
+    """ Returns a set of nodes that are present in the @graph but are missing in the @sub_graph"""
     all_nodes = set()
 
     def _add_nodes(parent):
@@ -214,7 +218,19 @@ def _get_missing_nodes(graph, sub_graph, entry_point):
     return all_nodes
 
 
+def _dfs(graph, start, visited=None):
+    """ Recursive depth first search """
+    visited = visited or set()
+    visited.add(start)
+    for node in set(graph[start]) - visited:
+        _dfs(graph, node, visited)
+    return visited
+
+
 def _get_all_unreachable_nodes(graph, entry_point, state_exclusion_list, transition_exclusion_list):
+    """ Given a @graph and a bunch of unreachable states in @state_exclusion_list calculates which other nodes cannot
+    be reached
+    """
     sub_graph = _create_transition_map_with_exclusions(graph, entry_point, state_exclusion_list,
                                                        transition_exclusion_list)
     return _get_missing_nodes(graph, sub_graph, entry_point)
@@ -356,6 +372,22 @@ class StateMachineCrawler(object):
             next_states = shortest_path[1:]
         for next_state in next_states:
             self._do_step(next_state)
+
+    def verify_all_states(self):
+        """ Makes sure that all states can be visited. It uses a depth first search to find the somewhat the
+        quickest path.
+        """
+        all_states_to_check = _dfs(self._state_graph, self._initial_state)
+        for state in all_states_to_check:
+            if state in self._error_states:
+                continue
+            try:
+                self.move(state)
+            except TransitionError:
+                pass  # we just move on
+        if self._error_states:
+            failed_states = map(str, self._error_states)
+            raise TransitionError("Failed to visit the following states: %s" % ", ".join(sorted(failed_states)))
 
     def _serialize_state(self, state):  # pragma: no cover
         if state is self._entry_point:
