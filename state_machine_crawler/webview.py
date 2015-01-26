@@ -22,7 +22,7 @@ class SilentHandler(WSGIRequestHandler):
 
 class WebView(object):
 
-    PORT = 8080
+    PORT = 8666
     HOST = 'localhost'
 
     def __init__(self, state_machine):
@@ -86,6 +86,7 @@ class WebView(object):
     def start(self):
         self._alive = True
         self._viewer_thread.start()
+        print("Started the server at port %d" % self.PORT)
 
     def stop(self):
         self._alive = False
