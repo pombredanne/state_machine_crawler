@@ -11,7 +11,7 @@ ch.setFormatter(logging.Formatter("%(message)s"))
 LOG.addHandler(ch)
 
 NODE_TPL = "%(name)s [style=filled label=\"%(label)s\" shape=%(shape)s fillcolor=%(color)s fontcolor=%(text_color)s];"
-EDGE_TPL = "%(source)s -> %(target)s [color=%(color)s];"
+EDGE_TPL = "%(source)s -> %(target)s [color=%(color)s fontcolor=%(text_color)s label=\"%(label)s\"];"
 
 
 def _equivalent(transition_one, transition_two):
@@ -418,14 +418,16 @@ class StateMachineCrawler(object):
         if not transition.source_state:
             return ""
         if filter(lambda error_transition: _equivalent(transition, error_transition), self._error_transitions):
-            color = "red"
+            color = text_color = "red"
         elif _equivalent(transition, self._current_transition):
-            color = "forestgreen"
+            color = text_color = "forestgreen"
         else:
-            color = "black"
+            color = text_color = "black"
         return EDGE_TPL % dict(source=transition.source_state.__name__,
                                target=transition.target_state.__name__,
-                               color=color)
+                               color=color,
+                               label="$%d" % transition.cost,
+                               text_color=text_color)
 
     def __repr__(self):
         # TODO: implement .dot graph generation here without pydot dependency

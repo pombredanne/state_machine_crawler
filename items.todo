@@ -11,6 +11,6 @@
      ☐ show details of failures on hover
      ☐ show state descriptions on hover
      ☐ show log in a pane
-     ☐ show status completion bar
- ☐ mark the states that were sucessfully visited as yellow
- ☐ mark the states that were sucessfully visited once but after another attempt to visit - failed as orange
+ ✔ mark the states that were sucessfully visited as yellow @done (15-01-26 16:33)
+ ✔ mark the states that were sucessfully visited once but after another attempt to visit - failed as orange @done (15-01-26 16:33)
+ ✔ show price of the transition as "$PRICE" @done (15-01-26 16:46)
