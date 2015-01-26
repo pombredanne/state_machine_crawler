@@ -383,6 +383,9 @@ class StateMachineCrawler(object):
                 self.move(state)
             except TransitionError:
                 pass  # we just move on
+        if self._initial_state not in self._error_states:
+            self.move(self._initial_state)
+            self._current_state = self._entry_point
         if self._error_states:
             failed_states = map(str, self._error_states)
             raise TransitionError("Failed to visit the following states: %s" % ", ".join(sorted(failed_states)))

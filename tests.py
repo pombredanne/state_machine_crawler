@@ -15,20 +15,20 @@ EXEC_TIME = 0.0
 
 DOT_GRAPH = """digraph StateMachine {
     splines=polyline;
-    StateTwo [style=filled label="StateTwo" shape=box fillcolor=forestgreen fontcolor=white];
-    EntryPoint [style=filled label="+" shape=doublecircle fillcolor=white fontcolor=black];
     StateThreeVariantOne [style=filled label="StateThreeVariantOne" shape=box fillcolor=white fontcolor=black];
-    StateThreeVariantTwo [style=filled label="StateThreeVariantTwo" shape=box fillcolor=white fontcolor=black];
-    StateFour [style=filled label="StateFour" shape=box fillcolor=white fontcolor=black];
-    StateOne [style=filled label="StateOne" shape=box fillcolor=white fontcolor=black];
-    InitialState [style=filled label="InitialState" shape=box fillcolor=white fontcolor=black];
-    StateTwo -> StateThreeVariantTwo [color=black];
-    StateTwo -> StateThreeVariantOne [color=black];
-    EntryPoint -> InitialState [color=black];
     StateThreeVariantOne -> StateFour [color=black];
+    StateFour [style=filled label="StateFour" shape=box fillcolor=white fontcolor=black];
+    EntryPoint [style=filled label="+" shape=doublecircle fillcolor=white fontcolor=black];
+    EntryPoint -> InitialState [color=black];
+    StateThreeVariantTwo [style=filled label="StateThreeVariantTwo" shape=box fillcolor=white fontcolor=black];
     StateThreeVariantTwo -> StateFour [color=black];
+    StateOne [style=filled label="StateOne" shape=box fillcolor=yellow fontcolor=black];
     StateOne -> StateTwo [color=forestgreen];
     StateOne -> StateOne [color=black];
+    StateTwo [style=filled label="StateTwo" shape=box fillcolor=forestgreen fontcolor=white];
+    StateTwo -> StateThreeVariantTwo [color=black];
+    StateTwo -> StateThreeVariantOne [color=black];
+    InitialState [style=filled label="InitialState" shape=box fillcolor=yellow fontcolor=black];
     InitialState -> StateOne [color=black];
 }"""
 
@@ -194,7 +194,7 @@ class BaseFunctionsTest(unittest.TestCase):
                  "C": ["F", "G", "A"],
                  "F": ["C", "A"],
                  "G": ["C", "A"]}
-        self.assertEqual(_dfs(graph, "A"), set(['A', 'C', 'B', 'E', 'D', 'G', 'F']))
+        self.assertEqual(_dfs(graph, "A"), ['A', 'C', 'G', 'F', 'B', 'E', 'D'])
 
 
 class BaseTestStateMachineTransitionCase(unittest.TestCase):
