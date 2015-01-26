@@ -22,6 +22,6 @@ setup(
     author="Anton Berezin",
     author_email="gurunars@gmail.com",
     data_files=[
-        ("/usr/share/state_machine_crawler", ["webview"])
+        ("/usr/share/state_machine_crawler", ["webview/index.html", "webview/jquery-2.1.3.min.js", "webview/viz.js"])
     ]
 )
