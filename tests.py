@@ -13,23 +13,28 @@ LOG.handlers = []
 EXEC_TIME = 0.0
 
 
-DOT_GRAPH = """digraph StateMachine {
-    splines=polyline;
-    StateThreeVariantOne [style=filled label="StateThreeVariantOne" shape=box fillcolor=white fontcolor=black];
-    StateThreeVariantOne -> StateFour [color=black];
-    StateFour [style=filled label="StateFour" shape=box fillcolor=white fontcolor=black];
+DOT_GRAPH = """digraph StateMachine {splines=ortho; concentrate=true; rankdir=LR;
     EntryPoint [style=filled label="+" shape=doublecircle fillcolor=white fontcolor=black];
-    EntryPoint -> InitialState [color=black];
-    StateThreeVariantTwo [style=filled label="StateThreeVariantTwo" shape=box fillcolor=white fontcolor=black];
-    StateThreeVariantTwo -> StateFour [color=black];
-    StateOne [style=filled label="StateOne" shape=box fillcolor=yellow fontcolor=black];
-    StateOne -> StateTwo [color=forestgreen];
-    StateOne -> StateOne [color=black];
-    StateTwo [style=filled label="StateTwo" shape=box fillcolor=forestgreen fontcolor=white];
-    StateTwo -> StateThreeVariantTwo [color=black];
-    StateTwo -> StateThreeVariantOne [color=black];
-    InitialState [style=filled label="InitialState" shape=box fillcolor=yellow fontcolor=black];
-    InitialState -> StateOne [color=black];
+
+    subgraph cluster_1 {
+        label="tests";
+        InitialState [style=filled label="InitialState" shape=box fillcolor=yellow fontcolor=black];
+        StateOne [style=filled label="StateOne" shape=box fillcolor=yellow fontcolor=black];
+        StateTwo [style=filled label="StateTwo" shape=box fillcolor=forestgreen fontcolor=white];
+        StateFour [style=filled label="StateFour" shape=box fillcolor=white fontcolor=black];
+        StateThreeVariantOne [style=filled label="StateThreeVariantOne" shape=box fillcolor=white fontcolor=black];
+        StateThreeVariantTwo [style=filled label="StateThreeVariantTwo" shape=box fillcolor=white fontcolor=black];
+    }
+
+    InitialState -> StateOne [color=black fontcolor=black label="$1"];
+    EntryPoint -> InitialState [color=black fontcolor=black label="$1"];
+    StateOne -> StateTwo [color=forestgreen fontcolor=forestgreen label="$1"];
+    StateOne -> StateOne [color=black fontcolor=black label="$1"];
+    StateTwo -> StateThreeVariantOne [color=black fontcolor=black label="$2"];
+    StateTwo -> StateThreeVariantTwo [color=black fontcolor=black label="$1"];
+    StateThreeVariantOne -> StateFour [color=black fontcolor=black label="$1"];
+    StateThreeVariantTwo -> StateFour [color=black fontcolor=black label="$1"];
+
 }"""
 
 
@@ -361,7 +366,7 @@ class TestStateMachineSerialization(BaseTestStateMachineTransitionCase):
     def test_repr(self):
         self.smc.move(StateTwo)
         value = repr(self.smc)
-        target_lines = DOT_GRAPH.replace("\n", "").replace("    ", "").split(";")
-        real_lines = value.split(";")
-        print value.replace(";", ";\n    ")
+        target_lines = DOT_GRAPH.replace("\n", "").replace("    ", "").replace("}", "};").replace("{", "{;").split(";")
+        real_lines = value.replace("}", "};").replace("{", "{;").split(";")
+        print value.replace(";", ";\n    ").replace("}", "}\n    ").replace("{", "{\n    ")
         self.assertEqual(sorted(real_lines), sorted(target_lines))

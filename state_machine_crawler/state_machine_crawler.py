@@ -1,6 +1,7 @@
 import logging
 from inspect import isclass
 from abc import ABCMeta, abstractmethod
+from collections import defaultdict
 
 
 LOG = logging.getLogger("state_machine_crawler")
@@ -377,7 +378,7 @@ class StateMachineCrawler(object):
         """
         all_states_to_check = _dfs(self._state_graph, self._initial_state)
         for state in all_states_to_check:
-            if state in self._error_states:
+            if state in self._error_states:  # pragma: no cover
                 continue
             try:
                 self.move(state)
@@ -437,11 +438,30 @@ class StateMachineCrawler(object):
             for st in target_states:
                 all_states.add(st)
 
-        rval = ["digraph StateMachine {splines=polyline;"]
+        module_map = defaultdict(list)
         for state in all_states:
-            rval.append(self._serialize_state(state))
+            if state is self._entry_point:
+                continue
+            module_map[state.__module__].append(state)
+
+        rval = ["digraph StateMachine {splines=ortho; concentrate=true; rankdir=LR;"]
+
+        rval.append(self._serialize_state(self._entry_point))
+
+        i = 1
+        for module_name, states in module_map.iteritems():
+            cluster_name = module_name.split(".")[-1]
+            cluster_data = ["subgraph cluster_%d {label=\"%s\";" % (i, cluster_name)]
+            for state in states:
+                cluster_data.append(self._serialize_state(state))
+            cluster_data.append("}")
+            rval.append("".join(cluster_data))
+            i += 1
+
+        for state in all_states:
             for transition in state.transition_map.itervalues():
                 rval.append(self._serialize_transition(transition))
+
         rval.append("}")
 
         return "".join(rval)
