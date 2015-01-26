@@ -1,9 +1,13 @@
- ☐ implement state machine's __repr__ method to return .dot representation
-     ☐ mark error transitions/states as red
-     ☐ mark current states/transitions as green
+ ☐ implement separate (!) commands to test that:
+     ☐ all states are reachable
+     ☐ all states are reachable and all transactions are doable
+     ☐ all child states of a specific state are reachable (use node count for that)
+ ✔ implement state machine's __repr__ method to return .dot representation @done (15-01-26 10:23)
+     ✔ mark error transitions/states as red @done (15-01-26 10:22)
+     ✔ mark current states/transitions as green @done (15-01-26 10:23)
      ☐ use subgraphs for all states in separate modules
  ☐ design urls for the web viewer
-     ☐ show the big picture
+     ✔ show the big picture @done (15-01-26 10:23)
      ☐ show details of failures on hover
      ☐ show state descriptions on hover
      ☐ show log in a pane
