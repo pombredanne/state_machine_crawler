@@ -87,8 +87,8 @@ class Transition(object):
         sstate = source_state
 
         class NewTransition(cls):
-            target_state = tstate
-            source_state = sstate
+            target_state = tstate or cls.target_state
+            source_state = sstate or cls.source_state
         return NewTransition
 
 
