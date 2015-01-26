@@ -1,5 +1,5 @@
  ☐ implement separate (!) commands to test that:
-     ☐ all states are reachable
+     ✔ all states are reachable @done (15-01-26 15:54)
      ☐ all states are reachable and all transactions are doable
      ☐ all child states of a specific state are reachable (use node count for that)
  ✔ implement state machine's __repr__ method to return .dot representation @done (15-01-26 10:23)
@@ -12,3 +12,5 @@
      ☐ show state descriptions on hover
      ☐ show log in a pane
      ☐ show status completion bar
+ ☐ mark the states that were sucessfully visited as yellow
+ ☐ mark the states that were sucessfully visited once but after another attempt to visit - failed as orange

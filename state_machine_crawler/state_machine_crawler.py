@@ -220,9 +220,10 @@ def _get_missing_nodes(graph, sub_graph, entry_point):
 
 def _dfs(graph, start, visited=None):
     """ Recursive depth first search """
-    visited = visited or set()
-    visited.add(start)
-    for node in set(graph[start]) - visited:
+    visited = visited or []
+    if start not in visited:
+        visited.append(start)
+    for node in set(graph[start]) - set(visited):
         _dfs(graph, node, visited)
     return visited
 
@@ -257,6 +258,7 @@ class StateMachineCrawler(object):
         self._current_transition = None
         # placeholders for the classes that caused transition failure
         self._error_states = set()
+        self._visited_states = set()
         self._error_transitions = set()
         self._initial_transition = initial_transition
         self._initial_state = initial_transition.target_state
@@ -273,7 +275,6 @@ class StateMachineCrawler(object):
         self._state_graph[EntryPoint] = {self._initial_state}
         self._current_state = self._entry_point = EntryPoint
 
-        self._on_state_change = lambda: None
         LOG.info("State machine crawler initialized")
 
     @property
@@ -287,7 +288,6 @@ class StateMachineCrawler(object):
 
     def _do_step(self, next_state):
         self._current_transition = transition = self._get_transition(self._current_state, next_state)
-        self._on_state_change()
         try:
             LOG.info("Transition to state %s started", next_state)
             transition(self._system).move()
@@ -297,7 +297,6 @@ class StateMachineCrawler(object):
             self._error_transitions.add(transition)
             LOG.exception("Failed to move to: %s", next_state)
             transition_ok = False
-        self._on_state_change()
         if not transition_ok:
             self._current_state = self._entry_point
             self._err(next_state, "transition failure")
@@ -311,7 +310,7 @@ class StateMachineCrawler(object):
         if verification_ok:
             self._current_state = next_state
             LOG.info("State changed to %s", next_state)
-            self._on_state_change()
+            self._visited_states.add(next_state)
         else:
             self._error_states = _get_all_unreachable_nodes(self._state_graph, self._entry_point,
                                                             set.union(self._error_states, {next_state}),
@@ -323,7 +322,6 @@ class StateMachineCrawler(object):
                     self._error_transitions.add(transition)
 
             LOG.error("State verification error for: %s", next_state)
-            self._on_state_change()
             self._current_state = self._entry_point
             self._err(next_state, "verification failure")
 
@@ -400,7 +398,13 @@ class StateMachineCrawler(object):
             color = "forestgreen"
             text_color = "white"
         elif state in self._error_states:
-            color = "red"
+            if state in self._visited_states:
+                color = "orange"
+            else:
+                color = "red"
+            text_color = "black"
+        elif state in self._visited_states:
+            color = "yellow"
             text_color = "black"
         else:
             color = "white"
