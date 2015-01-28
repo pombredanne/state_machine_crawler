@@ -10,7 +10,7 @@ from state_machine_crawler.state_machine_crawler import _create_transition_map, 
 
 LOG.handlers = []
 
-EXEC_TIME = 0.0
+EXEC_TIME = 0
 
 
 DOT_GRAPH = """digraph StateMachine {splines=ortho; concentrate=true; rankdir=LR;

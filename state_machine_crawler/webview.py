@@ -10,6 +10,8 @@ from werkzeug.wrappers import Response, Request
 from werkzeug.routing import Map, Rule
 from werkzeug.wsgi import wrap_file
 
+import pydot
+
 
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -33,15 +35,17 @@ class WebView(object):
         url_map = [
             Rule("/", endpoint=partial(self.static, path="index.html")),
             Rule("/kill", endpoint=None),
-            Rule("/graph.dot", endpoint=self.graph),
+            Rule("/graph.svg", endpoint=self.graph),
             Rule("/<string:path>", endpoint=self.static)
         ]
 
         self._url_map = Map(url_map)
 
     def graph(self, request):
-        resp = Response(repr(self._state_machine))
-        resp.mimetype = "text/x-graphviz"
+        dot = repr(self._state_machine)
+        graph = pydot.graph_from_dot_data(dot)
+        resp = Response(graph.create_svg())
+        resp.mimetype = "image/svg+xml"
         return resp
 
     def static(self, request, path):
@@ -86,7 +90,7 @@ class WebView(object):
     def start(self):
         self._alive = True
         self._viewer_thread.start()
-        print("Started the server at port %d" % self.PORT)
+        print("Started the server at http://%s:%d" % (self.HOST, self.PORT))
 
     def stop(self):
         self._alive = False

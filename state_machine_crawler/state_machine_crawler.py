@@ -444,7 +444,7 @@ class StateMachineCrawler(object):
                 continue
             module_map[state.__module__].append(state)
 
-        rval = ["digraph StateMachine {splines=ortho; concentrate=true; rankdir=LR;"]
+        rval = ["digraph StateMachine {splines=polyline; concentrate=true; rankdir=LR;"]
 
         rval.append(self._serialize_state(self._entry_point))
 
