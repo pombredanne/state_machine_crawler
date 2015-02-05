@@ -1,4 +1,5 @@
 import logging
+import re
 from inspect import isclass
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
@@ -97,6 +98,7 @@ class StateMetaClass(ABCMeta):
     def __init__(self, name, bases, attrs):
         super(StateMetaClass, self).__init__(name, bases, attrs)
         self.transition_map = {}
+        self.full_name = self.__module__ + "." + self.__name__
         for name in dir(self):
             attr = getattr(self, name)
             if not (isclass(attr) and issubclass(attr, Transition)):
@@ -372,12 +374,21 @@ class StateMachineCrawler(object):
         for next_state in next_states:
             self._do_step(next_state)
 
-    def verify_all_states(self):
+    def verify_all_states(self, pattern=None):
         """ Makes sure that all states can be visited. It uses a depth first search to find the somewhat the
         quickest path.
         """
         all_states_to_check = _dfs(self._state_graph, self._initial_state)
-        for state in all_states_to_check:
+
+        actual_states_to_check = []
+        if pattern is not None:
+            for state in all_states_to_check:
+                if re.match(pattern, state.full_name):
+                    actual_states_to_check.append(state)
+        else:
+            actual_states_to_check = all_states_to_check
+
+        for state in actual_states_to_check:
             if state in self._error_states:  # pragma: no cover
                 continue
             try:

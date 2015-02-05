@@ -261,6 +261,11 @@ class PositiveTestStateMachineTransitionTest(BaseTestStateMachineTransitionCase)
                          set(['StateTwo', 'StateThreeVariantOne', 'StateFour', 'InitialState', 'StateOne',
                               'StateThreeVariantTwo']))
 
+    def test_some(self):
+        self.smc.verify_all_states(pattern=".*Two")
+        visited_states = map(lambda item: item[0][0], self.target.visited.call_args_list)
+        self.assertEqual(set(visited_states), set(['StateTwo', 'StateThreeVariantTwo']))
+
     def tearDown(self):
         self.target.reset_mock()
 
