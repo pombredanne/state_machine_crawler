@@ -451,7 +451,7 @@ class StateMachineCrawler(object):
         i = 1
         for module_name, states in module_map.iteritems():
             cluster_name = module_name.split(".")[-1]
-            cluster_data = ["subgraph cluster_%d {label=\"%s\";" % (i, cluster_name)]
+            cluster_data = ["subgraph cluster_%d {label=\"%s\";color=blue;fontcolor=blue;" % (i, cluster_name)]
             for state in states:
                 cluster_data.append(self._serialize_state(state))
             cluster_data.append("}")

@@ -13,11 +13,13 @@ LOG.handlers = []
 EXEC_TIME = 0
 
 
-DOT_GRAPH = """digraph StateMachine {splines=ortho; concentrate=true; rankdir=LR;
+DOT_GRAPH = """digraph StateMachine {splines=polyline; concentrate=true; rankdir=LR;
     EntryPoint [style=filled label="+" shape=doublecircle fillcolor=white fontcolor=black];
 
     subgraph cluster_1 {
         label="tests";
+        color=blue;
+        fontcolor=blue;
         InitialState [style=filled label="InitialState" shape=box fillcolor=yellow fontcolor=black];
         StateOne [style=filled label="StateOne" shape=box fillcolor=yellow fontcolor=black];
         StateTwo [style=filled label="StateTwo" shape=box fillcolor=forestgreen fontcolor=white];
