@@ -24,13 +24,13 @@ class SilentHandler(WSGIRequestHandler):
 
 class WebView(object):
 
-    PORT = 8666
     HOST = 'localhost'
 
     def __init__(self, state_machine):
         self._state_machine = state_machine
         self._viewer_thread = threading.Thread(target=self._run_server)
         self._alive = True
+        self._server = None
 
         url_map = [
             Rule("/", endpoint=partial(self.static, path="index.html")),
@@ -83,18 +83,18 @@ class WebView(object):
         return resp(environ, start_response)
 
     def _run_server(self):
-        httpd = make_server(self.HOST, self.PORT, self, handler_class=SilentHandler)
+        self._server = httpd = make_server(self.HOST, 0, self, handler_class=SilentHandler)
+        print("Started the server at http://%s:%d" % (self.HOST, httpd.server_port))
         while self._alive:
             httpd.handle_request()
 
     def start(self):
         self._alive = True
         self._viewer_thread.start()
-        print("Started the server at http://%s:%d" % (self.HOST, self.PORT))
 
     def stop(self):
         self._alive = False
-        urllib2.urlopen("http://%s:%d/kill" % (self.HOST, self.PORT))
+        urllib2.urlopen("http://%s:%d/kill" % (self.HOST, self._server.server_port))
         self._viewer_thread.join()
 
 
