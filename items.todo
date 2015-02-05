@@ -5,7 +5,7 @@
  ✔ implement state machine's __repr__ method to return .dot representation @done (15-01-26 10:23)
      ✔ mark error transitions/states as red @done (15-01-26 10:22)
      ✔ mark current states/transitions as green @done (15-01-26 10:23)
-     ☐ use subgraphs for all states in separate modules
+     ✔ use subgraphs for all states in separate modules @done (15-02-05 10:22)
  ☐ design urls for the web viewer
      ✔ show the big picture @done (15-01-26 10:23)
      ☐ show details of failures on hover
