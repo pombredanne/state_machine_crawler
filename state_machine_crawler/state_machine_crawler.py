@@ -254,6 +254,7 @@ class StateMachineCrawler(object):
         # placeholders for the classes that caused transition failure
         self._error_states = set()
         self._visited_states = set()
+        self._visited_transitions = set()
         self._error_transitions = set()
         self._initial_transition = initial_transition
         self._initial_state = initial_transition.target_state
@@ -295,6 +296,7 @@ class StateMachineCrawler(object):
             self._error_transitions.add(transition)
             LOG.exception("Failed to move to: %s", next_state)
             transition_ok = False
+        self._visited_transitions.add(transition)
         if not transition_ok:
             self._current_state = self._entry_point
             self._err(next_state, "transition failure")
@@ -428,6 +430,9 @@ class StateMachineCrawler(object):
             color = text_color = "red"
         elif _equivalent(transition, self._current_transition):
             color = text_color = "forestgreen"
+        elif transition in self._visited_transitions:
+            color = "yellow"
+            text_color = "black"
         else:
             color = text_color = "black"
         return EDGE_TPL % dict(source=transition.source_state.__name__,

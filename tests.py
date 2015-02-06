@@ -28,7 +28,7 @@ DOT_GRAPH = """digraph StateMachine {splines=polyline; concentrate=true; rankdir
         StateThreeVariantTwo [style=filled label="StateThreeVariantTwo" shape=box fillcolor=white fontcolor=black];
     }
 
-    InitialState -> StateOne [color=black fontcolor=black label="$1"];
+    InitialState -> StateOne [color=yellow fontcolor=black label="$1"];
     EntryPoint -> InitialState [color=black fontcolor=black label="$1"];
     StateOne -> StateTwo [color=forestgreen fontcolor=forestgreen label="$1"];
     StateOne -> StateOne [color=black fontcolor=black label="$1"];
