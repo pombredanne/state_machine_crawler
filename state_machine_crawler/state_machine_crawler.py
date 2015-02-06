@@ -250,12 +250,7 @@ class StateMachineCrawler(object):
             raise DeclarationError("initial transition has no target state")
 
         self._system = system
-        self._current_transition = None
-        # placeholders for the classes that caused transition failure
-        self._error_states = set()
-        self._visited_states = set()
-        self._visited_transitions = set()
-        self._error_transitions = set()
+        self.clear()
         self._initial_transition = initial_transition
         self._initial_state = initial_transition.target_state
         self._state_graph = the_map = _create_transition_map(self._initial_state)
@@ -275,6 +270,13 @@ class StateMachineCrawler(object):
         self._current_state = self._entry_point = EntryPoint
 
         LOG.info("State machine crawler initialized")
+
+    def clear(self):
+        self._current_transition = None
+        self._error_states = set()
+        self._visited_states = set()
+        self._visited_transitions = set()
+        self._error_transitions = set()
 
     @property
     def state(self):
@@ -372,8 +374,10 @@ class StateMachineCrawler(object):
             self._do_step(next_state)
 
     def verify_all_states(self, pattern=None):
-        """ Makes sure that all states can be visited. It uses a depth first search to find the somewhat the
-        quickest path.
+        """
+        Makes sure that all states can be visited. It uses a depth first search to find the somewhat the quickest path.
+
+        @pattern (str=None): visits only the states full names of which match the pattern
         """
         all_states_to_check = _dfs(self._state_graph, self._initial_state)
 
@@ -386,7 +390,7 @@ class StateMachineCrawler(object):
             actual_states_to_check = all_states_to_check
 
         for state in actual_states_to_check:
-            if state in self._error_states:  # pragma: no cover
+            if state in self._error_states or state in self._visited_states:  # pragma: no cover
                 continue
             try:
                 self.move(state)

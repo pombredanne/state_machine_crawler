@@ -268,6 +268,7 @@ class PositiveTestStateMachineTransitionTest(BaseTestStateMachineTransitionCase)
 
     def tearDown(self):
         self.target.reset_mock()
+        self.smc.clear()
 
 
 class NegativeTestCases(unittest.TestCase):
