@@ -119,18 +119,18 @@ class BaseFunctionsTest(unittest.TestCase):
     def test_create_transition_map(self):
 
         rval = {}
-        for key, value in _create_transition_map(InitialTransition).iteritems():
+        for key, value in _create_transition_map(InitialState).iteritems():
             if key.__name__ == "EntryPoint":
                 continue
             rval[key] = value
 
         self.assertEqual({
-            InitialState: {StateOne, InitialState},
-            StateOne: {StateTwo, StateOne, InitialState},
-            StateTwo: {StateThreeVariantOne, StateThreeVariantTwo, InitialState},
-            StateThreeVariantOne: {StateFour, InitialState},
-            StateThreeVariantTwo: {StateFour, InitialState},
-            StateFour: {InitialState}
+            InitialState: {StateOne},
+            StateOne: {StateTwo, StateOne},
+            StateTwo: {StateThreeVariantOne, StateThreeVariantTwo},
+            StateThreeVariantOne: {StateFour},
+            StateThreeVariantTwo: {StateFour},
+            StateFour: set()
         }, rval)
 
     def test_create_transition_map_with_state_exclusions(self):
@@ -175,7 +175,7 @@ class BaseFunctionsTest(unittest.TestCase):
         self.assertEqual(_get_missing_nodes(graph, filtered_graph, 0), {1, 3, 4, 5, 9})
 
     def test_find_shortest_path(self):
-        graph = _create_transition_map(InitialTransition)
+        graph = _create_transition_map(InitialState)
 
         def get_cost(states):
             cost = 0
@@ -189,7 +189,7 @@ class BaseFunctionsTest(unittest.TestCase):
         self.assertEqual(shortest_path, [InitialState, StateOne, StateTwo, StateThreeVariantTwo, StateFour])
 
     def test_unknown_state(self):
-        graph = _create_transition_map(InitialTransition)
+        graph = _create_transition_map(InitialState)
         shortest_path = _find_shortest_path(graph, UnknownState, StateFour)
         self.assertIs(shortest_path, None)
 
@@ -262,9 +262,9 @@ class PositiveTestStateMachineTransitionTest(BaseTestStateMachineTransitionCase)
                               'StateThreeVariantTwo']))
 
     def test_some(self):
-        self.smc.verify_all_states(pattern=".*Two")
+        self.smc.verify_all_states(pattern=".*StateOne")
         visited_states = map(lambda item: item[0][0], self.target.visited.call_args_list)
-        self.assertEqual(set(visited_states), set(['StateTwo', 'StateThreeVariantTwo']))
+        self.assertEqual(set(visited_states), set(['InitialState', 'StateOne']))
 
     def tearDown(self):
         self.target.reset_mock()
