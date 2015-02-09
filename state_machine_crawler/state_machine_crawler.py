@@ -151,8 +151,9 @@ class Transition(object):
     cost (int)
         Relative *price* of the transition. Transitions that take longer time to run are more *expensive*. The *cost*
         has to be experimentally determined.
-    target_state (subclass of :class:`State <state_machine_crawler.State>`)
-        The state to which the system should be transitioned
+    target_state (subclass of :class:`State <state_machine_crawler.State>` or string "self")
+        The state to which the system should be transitioned, if "self" is used the transition is done to the holder
+        class itself
     source_state (subclass of :class:`State <state_machine_crawler.State>`)
         The state from which the system should be transitioned
 
@@ -229,7 +230,10 @@ class State(object):
 
     @abstractmethod
     def verify(self):
-        """ Checks if the system ended up in a desired state. Should return a boolean. """
+        """
+        Checks if the system ended up in a desired state. Should return a boolean indicating if verification went well
+        or not.
+        """
 
 
 class StateMachineCrawler(object):

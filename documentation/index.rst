@@ -38,10 +38,10 @@ Error class
 
 .. autoclass:: state_machine_crawler.TransitionError
 
-Graphviz visualization
-----------------------
+Graph visualization
+-------------------
 
 When state machine gets big it might become difficult to monitor state transitions within it. In such a case a
-*GraphMonitor* class should be used:
+*WebView* class should be used:
 
-.. autoclass:: state_machine_crawler.GraphMonitor
+.. autoclass:: state_machine_crawler.WebView

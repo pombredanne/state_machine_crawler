@@ -23,6 +23,28 @@ class SilentHandler(WSGIRequestHandler):
 
 
 class WebView(object):
+    """
+
+    cost (state_machine):
+        :class:`StateMachineCrawler <state_machine_crawler.StateMachineCrawler>` instance
+
+    Sample usage:
+
+    >>> app = WebView(state_machine)
+    >>> try:
+    >>>     app.start()
+    >>>     state_machine.verify_all_states()
+    >>> except TransitionError, e:
+    >>>     print e
+    >>> except KeyboardInterrupt:
+    >>>     pass
+    >>> app.stop()
+
+    Once the code is executed, a web service monitoring your state machine shall be started under a random available
+    port in a separate thread. The url shall be printed to stdout to ease the access.
+
+    An html page of the web service is a dynamic view of the state graph that represents the state machine.
+    """
 
     HOST = 'localhost'
 
@@ -33,22 +55,22 @@ class WebView(object):
         self._server = None
 
         url_map = [
-            Rule("/", endpoint=partial(self.static, path="index.html")),
+            Rule("/", endpoint=partial(self._static, path="index.html")),
             Rule("/kill", endpoint=None),
-            Rule("/graph.svg", endpoint=self.graph),
-            Rule("/<string:path>", endpoint=self.static)
+            Rule("/graph.svg", endpoint=self._graph),
+            Rule("/<string:path>", endpoint=self._static)
         ]
 
         self._url_map = Map(url_map)
 
-    def graph(self, request):
+    def _graph(self, request):
         dot = repr(self._state_machine)
         graph = pydot.graph_from_dot_data(dot)
         resp = Response(graph.create_svg())
         resp.mimetype = "image/svg+xml"
         return resp
 
-    def static(self, request, path):
+    def _static(self, request, path):
         local_path = os.path.join(PROJECT_DIR, "webview")
         file_name = path.lstrip("/").replace("/", os.path.sep)
 
