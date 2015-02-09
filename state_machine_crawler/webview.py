@@ -118,38 +118,3 @@ class WebView(object):
         self._alive = False
         urllib2.urlopen("http://%s:%d/kill" % (self.HOST, self._server.server_port))
         self._viewer_thread.join()
-
-
-if __name__ == "__main__":
-
-    SAMPLE_GRAPH = """digraph StateMachine {
-        splines=polyline;
-        StateTwo [style=filled label="StateTwo" shape=box fillcolor=forestgreen fontcolor=white];
-        EntryPoint [style=filled label="+" shape=doublecircle fillcolor=white fontcolor=black];
-        StateThreeVariantOne [style=filled label="StateThreeVariantOne" shape=box fillcolor=white fontcolor=black];
-        StateThreeVariantTwo [style=filled label="StateThreeVariantTwo" shape=box fillcolor=white fontcolor=black];
-        StateFour [style=filled label="StateFour" shape=box fillcolor=white fontcolor=black];
-        StateOne [style=filled label="StateOne" shape=box fillcolor=white fontcolor=black];
-        InitialState [style=filled label="InitialState" shape=box fillcolor=white fontcolor=black];
-        StateTwo -> StateThreeVariantTwo [color=black];
-        StateTwo -> StateThreeVariantOne [color=black];
-        EntryPoint -> InitialState [color=black];
-        StateThreeVariantOne -> StateFour [color=black];
-        StateThreeVariantTwo -> StateFour [color=black];
-        StateOne -> StateTwo [color=forestgreen];
-        StateOne -> StateOne [color=black];
-        InitialState -> StateOne [color=black];
-    }"""
-
-    class FakeStateMachine(object):
-
-        def __repr__(self):
-            return SAMPLE_GRAPH
-
-    app = WebView(FakeStateMachine())
-    try:
-        app.start()
-        while True:
-            pass
-    except KeyboardInterrupt:
-        app.stop()

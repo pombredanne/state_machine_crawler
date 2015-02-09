@@ -378,3 +378,23 @@ class TestStateMachineSerialization(BaseTestStateMachineTransitionCase):
         real_lines = value.replace("}", "};").replace("{", "{;").split(";")
         print value.replace(";", ";\n    ").replace("}", "}\n    ").replace("{", "{\n    ")
         self.assertEqual(sorted(real_lines), sorted(target_lines))
+
+
+def run_web_view():
+
+    class FakeStateMachine(object):
+
+        def __repr__(self):
+            return DOT_GRAPH
+
+    app = WebView(FakeStateMachine())
+    try:
+        app.start()
+        while True:
+            pass
+    except KeyboardInterrupt:
+        app.stop()
+
+
+if __name__ == "__main__":
+    run_web_view()
