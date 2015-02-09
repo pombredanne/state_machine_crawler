@@ -1,3 +1,13 @@
+5.0.0 2015-02-09
+
+    [Anton Berezin <gurunars@gmail.com>]
+        * MAJOR: use random available port for running a web service
+        * MINOR: automatic state graph traversal
+        * MINOR: webview butification
+        * MINOR: use pydot2 to produce svgs from dot graphs
+        * MINOR: option to say which states to visit
+        * MINOR: clear() method for the state machine
+
 4.0.0 2015-01-26
 
     [Anton Berezin <gurunars@gmail.com>]
