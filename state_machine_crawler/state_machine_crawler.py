@@ -200,19 +200,23 @@ class StateMetaClass(ABCMeta):
         self.full_name = self.__module__ + "." + self.__name__
         for name in dir(self):
             attr = getattr(self, name)
+
             if not (isclass(attr) and issubclass(attr, Transition)):
                 continue
+
+            class TempTransition(attr):
+                target_state = self if attr.target_state == "self" else attr.target_state
+            TempTransition.__name__ = name
+
+            attr = TempTransition
+            setattr(self, name, TempTransition)
+
             if attr.target_state:
                 attr.source_state = self
-                if attr.target_state == "self":
-                    attr.target_state = self
-                    self.transition_map[self] = attr
-                else:
-                    self.transition_map[attr.target_state] = attr
+                self.transition_map[attr.target_state] = attr
             elif attr.source_state:
-                class RelatedTransition(attr):
+                class RelatedTransition(TempTransition):
                     target_state = self
-                RelatedTransition.__name__ = name
                 attr.source_state.transition_map[self] = RelatedTransition
             else:
                 raise DeclarationError("No target nor source state is defined for %r" % attr)
