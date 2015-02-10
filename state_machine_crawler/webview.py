@@ -51,7 +51,7 @@ class WebView(object):
     def __init__(self, state_machine):
         self._state_machine = state_machine
         self._viewer_thread = threading.Thread(target=self._run_server)
-        self._alive = True
+        self._alive = False
         self._server = None
 
         url_map = [
