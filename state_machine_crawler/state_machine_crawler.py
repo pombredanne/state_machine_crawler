@@ -302,7 +302,7 @@ class StateMachineCrawler(object):
             transition(self._system).move()
             LOG.info("Transition to state %s finished", next_state)
             transition_ok = True
-        except:
+        except Exception:
             self._error_transitions.add(transition)
             LOG.exception("Failed to move to: %s", next_state)
             transition_ok = False
@@ -314,7 +314,7 @@ class StateMachineCrawler(object):
             LOG.info("Verification of state %s started", next_state)
             verification_ok = next_state(self._system).verify()
             LOG.info("Verification of state %s finished", next_state)
-        except:
+        except Exception:
             LOG.exception("Failed to verify transition to: %s" % next_state)
             verification_ok = False
         if verification_ok:
