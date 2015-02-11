@@ -27,7 +27,13 @@ def cli(scm):
     group.add_argument("-a", "--all", action="store_true", help="Exercise all states")
     group.add_argument("-s", "--some", help="Exercise all states names of which match a regexp")
     parser.add_argument("-w", "--with-webview", action="store_true", help="Indicates if webview should be started")
+    parser.add_argument("-c", "--current-state", type=existing_state,
+                        help="If it is known that the system is in specific state - it is possible to specify it and"
+                        " avoid extra transitions")
     args = parser.parse_args()
+
+    if args.current_state:
+        scm._current_state = args.current_state
 
     state_monitor = WebView(scm)
 
