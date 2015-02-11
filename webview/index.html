@@ -16,10 +16,10 @@
           statusCode: {
             200: function(graph){
               $("#state_diagram").html($("svg", graph));
-            }
+              setTimeout(reloadGraph, 500);
+            },
           }
       });
-      setTimeout(reloadGraph, 500);
     }
 
     $(document).ready(reloadGraph);

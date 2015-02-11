@@ -120,5 +120,5 @@ class WebView(object):
         if not self._alive:
             return
         self._alive = False
-        urllib2.urlopen("http://%s:%d/kill" % (self.HOST, self._server.server_port))
+        urllib2.urlopen("http://%s:%d/kill" % (self.HOST, self._server.server_port), timeout=5)
         self._viewer_thread.join()

@@ -1,7 +1,8 @@
 import argparse
 import time
+import logging
 
-from .state_machine_crawler import TransitionError
+from .state_machine_crawler import TransitionError, LOG
 from .webview import WebView
 
 
@@ -30,15 +31,19 @@ def cli(scm):
     parser.add_argument("-c", "--current-state", type=existing_state,
                         help="If it is known that the system is in specific state - it is possible to specify it and"
                         " avoid extra transitions")
+    parser.add_argument("-d", "--debug", action="store_true", help="print debug messages to stderr")
     args = parser.parse_args()
 
     if args.current_state:
         scm._current_state = args.current_state
 
+    if args.debug:
+        LOG.setLevel(logging.DEBUG)
+
     state_monitor = WebView(scm)
 
     def _stop():
-        time.sleep(0.3)  # to make sure that the monitor reflects the final state of the system
+        time.sleep(1)  # to make sure that the monitor reflects the final state of the system
         state_monitor.stop()
 
     try:

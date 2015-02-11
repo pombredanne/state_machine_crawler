@@ -447,10 +447,16 @@ class StateMachineCrawler(object):
             text_color = "black"
         else:
             color = text_color = "black"
+
+        if transition.cost == 1:
+            label = ""
+        else:
+            label = "$%d" % transition.cost
+
         return EDGE_TPL % dict(source=transition.source_state.__name__,
                                target=transition.target_state.__name__,
                                color=color,
-                               label="$%d" % transition.cost,
+                               label=label,
                                text_color=text_color)
 
     def __repr__(self):
