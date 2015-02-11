@@ -4,6 +4,7 @@ import urllib
 from functools import partial
 import threading
 import urllib2
+import socket
 from wsgiref.simple_server import make_server, WSGIRequestHandler
 
 from werkzeug.wrappers import Response, Request
@@ -120,5 +121,8 @@ class WebView(object):
         if not self._alive:
             return
         self._alive = False
-        urllib2.urlopen("http://%s:%d/kill" % (self.HOST, self._server.server_port), timeout=5)
+        try:
+            urllib2.urlopen("http://%s:%d/kill" % (self.HOST, self._server.server_port), timeout=3)
+        except socket.error:
+            pass
         self._viewer_thread.join()

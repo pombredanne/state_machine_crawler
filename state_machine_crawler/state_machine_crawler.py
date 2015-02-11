@@ -421,6 +421,9 @@ class StateMachineCrawler(object):
         if state is self._current_state:
             color = "forestgreen"
             text_color = "white"
+        elif state is self._current_transition.target_state:
+            color = "darkkhaki"
+            text_color = "black"
         elif state in self._error_states:
             if state in self._visited_states:
                 color = "orange"
@@ -449,7 +452,7 @@ class StateMachineCrawler(object):
             color = text_color = "black"
 
         if transition.cost == 1:
-            label = ""
+            label = " "
         else:
             label = "$%d" % transition.cost
 
