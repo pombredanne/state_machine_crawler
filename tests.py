@@ -28,14 +28,14 @@ DOT_GRAPH = """digraph StateMachine {splines=polyline; concentrate=true; rankdir
         StateThreeVariantTwo [style=filled label="StateThreeVariantTwo" shape=box fillcolor=white fontcolor=black];
     }
 
-    InitialState -> StateOne [color=yellow fontcolor=black label="$1"];
-    EntryPoint -> InitialState [color=black fontcolor=black label="$1"];
-    StateOne -> StateTwo [color=forestgreen fontcolor=forestgreen label="$1"];
-    StateOne -> StateOne [color=black fontcolor=black label="$1"];
+    InitialState -> StateOne [color=yellow fontcolor=black label=" "];
+    EntryPoint -> InitialState [color=black fontcolor=black label=" "];
+    StateOne -> StateTwo [color=forestgreen fontcolor=forestgreen label=" "];
+    StateOne -> StateOne [color=black fontcolor=black label=" "];
     StateTwo -> StateThreeVariantOne [color=black fontcolor=black label="$2"];
-    StateTwo -> StateThreeVariantTwo [color=black fontcolor=black label="$1"];
-    StateThreeVariantOne -> StateFour [color=black fontcolor=black label="$1"];
-    StateThreeVariantTwo -> StateFour [color=black fontcolor=black label="$1"];
+    StateTwo -> StateThreeVariantTwo [color=black fontcolor=black label=" "];
+    StateThreeVariantOne -> StateFour [color=black fontcolor=black label=" "];
+    StateThreeVariantTwo -> StateFour [color=black fontcolor=black label=" "];
 
 }"""
 
