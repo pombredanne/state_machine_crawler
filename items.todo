@@ -14,4 +14,7 @@
  ✔ mark the states that were sucessfully visited once but after another attempt to visit - failed as orange @done (15-01-26 16:33)
  ✔ show price of the transition as "$PRICE" @done (15-01-26 16:46)
  ☐ find a way to revisit only the transitions that failed on the previous run - as long as the graph did not change
- ☐ add command line interface
+ ✔ add command line interface @done (15-02-11 16:44)
+ ☐ generate junit report in such a manner that:
+     - each module is a test case
+     - individual tests are a combination of transition and verification
