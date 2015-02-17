@@ -3,7 +3,7 @@ import time
 
 import mock
 
-from state_machine_crawler import Transition, StateMachineCrawler, DeclarationError, TransitionError, \
+from state_machine_crawler import transition, StateMachineCrawler, DeclarationError, TransitionError, \
     State as BaseState, WebView
 from state_machine_crawler.state_machine_crawler import _create_transition_map, _find_shortest_path, LOG, \
     _create_transition_map_with_exclusions, _get_missing_nodes, _dfs
@@ -29,8 +29,8 @@ DOT_GRAPH = """digraph StateMachine {splines=polyline; concentrate=true; rankdir
     }
 
     InitialState -> StateOne [color=yellow fontcolor=black label=" "];
-    EntryPoint -> InitialState [color=black fontcolor=black label=" "];
-    StateOne -> StateTwo [color=forestgreen fontcolor=forestgreen label=" "];
+    EntryPoint -> InitialState [color=yellow fontcolor=black label=" "];
+    StateOne -> StateTwo [color=yellow fontcolor=black label=" "];
     StateOne -> StateOne [color=black fontcolor=black label=" "];
     StateTwo -> StateThreeVariantOne [color=black fontcolor=black label="$2"];
     StateTwo -> StateThreeVariantTwo [color=black fontcolor=black label=" "];
@@ -49,29 +49,11 @@ class State(BaseState):
 
 
 class InitialState(State):
-    pass
 
-
-class InitialTransition(Transition):
-    target_state = InitialState
-
-    def move(self):
+    @transition(source_state=StateMachineCrawler.EntryPoint)
+    def init(self):
         time.sleep(EXEC_TIME)
         self._system.enter()
-
-
-class UniqueTransition(Transition):
-
-    def move(self):
-        time.sleep(EXEC_TIME)
-        self._system.unique()
-
-
-class NonUniqueTransition(Transition):
-
-    def move(self):
-        time.sleep(EXEC_TIME)
-        self._system.non_unique()
 
 
 class UnknownState(State):
@@ -79,34 +61,53 @@ class UnknownState(State):
 
 
 class StateOne(State):
-    from_initial_state = UniqueTransition.link(source_state=InitialState)
 
-    class reset_transition(Transition):
-        target_state = "self"
+    @transition(source_state=InitialState)
+    def from_initial_state(self):
+        time.sleep(EXEC_TIME)
+        self._system.unique()
 
-        def move(self):
-            time.sleep(EXEC_TIME)
-            self._system.reset()
+    @transition(target_state="self")
+    def reset(self):
+        time.sleep(EXEC_TIME)
+        self._system.reset()
 
 
 class StateTwo(State):
-    from_state_one = UniqueTransition.link(source_state=StateOne)
+
+    @transition(source_state=StateOne)
+    def from_state_one(self):
+        time.sleep(EXEC_TIME)
+        self._system.unique()
 
 
 class StateThreeVariantOne(State):
 
-    class from_state_two(NonUniqueTransition):
-        cost = 2
-        source_state = StateTwo
+    @transition(source_state=StateTwo, cost=2)
+    def move(self):
+        time.sleep(EXEC_TIME)
+        self._system.non_unique()
 
 
 class StateThreeVariantTwo(State):
-    from_state_two = UniqueTransition.link(source_state=StateTwo)
+
+    @transition(source_state=StateTwo)
+    def from_state_two(self):
+        time.sleep(EXEC_TIME)
+        self._system.unique()
 
 
 class StateFour(State):
-    from_v1 = NonUniqueTransition.link(source_state=StateThreeVariantOne)
-    from_v2 = NonUniqueTransition.link(source_state=StateThreeVariantTwo)
+
+    @transition(source_state=StateThreeVariantOne)
+    def from_v1(self):
+        time.sleep(EXEC_TIME)
+        self._system.non_unique()
+
+    @transition(source_state=StateThreeVariantTwo)
+    def from_v2(self):
+        time.sleep(EXEC_TIME)
+        self._system.non_unique()
 
     def verify(self):
         if not super(StateFour, self).verify():
@@ -209,7 +210,7 @@ class BaseTestStateMachineTransitionCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.target = mock.Mock()
-        cls.smc = StateMachineCrawler(cls.target, InitialTransition)
+        cls.smc = StateMachineCrawler(cls.target, InitialState)
         if EXEC_TIME:
             cls.viewer = WebView(cls.smc)
             cls.viewer.start()
@@ -275,7 +276,7 @@ class NegativeTestCases(unittest.TestCase):
 
     def setUp(self):
         self.target = mock.Mock()
-        self.smc = StateMachineCrawler(self.target, InitialTransition)
+        self.smc = StateMachineCrawler(self.target, InitialState)
 
     def test_state_verification_failure(self):
         self.smc.move(InitialState)
@@ -291,7 +292,7 @@ class NegativeTestCases(unittest.TestCase):
         self.target.enter.side_effect = Exception
         self.assertRaisesRegexp(TransitionError, "Move from state .+ to state .+ has failed",
                                 self.smc.move, InitialState)
-        self.assertRaisesRegexp(TransitionError, "Move from state .+ to state .+ has failed",
+        self.assertRaisesRegexp(TransitionError, "There is no way to achieve state %r" % StateOne,
                                 self.smc.move, StateOne)
 
     def test_verification_error(self):
@@ -310,13 +311,13 @@ class NegativeTestCases(unittest.TestCase):
 
 class TestStateMachineDeclaration(unittest.TestCase):
 
-    def test_wrong_initial_state_transition(self):
+    def test_wrong_initial_state(self):
 
-        class NotATransition:
+        class NotAState:
             pass
 
-        self.assertRaisesRegexp(DeclarationError, "initial_transition must be a Transition subclass",
-                                StateMachineCrawler, None, NotATransition)
+        self.assertRaisesRegexp(DeclarationError, ".+ is not a State subclass",
+                                StateMachineCrawler, None, NotAState)
 
     def test_stateless_transition(self):
 
@@ -327,10 +328,9 @@ class TestStateMachineDeclaration(unittest.TestCase):
                 def verify(self):
                     return True
 
-                class StatelessTransition(Transition):
-
-                    def move(self):
-                        pass
+                @transition()
+                def move(self):
+                    pass
 
         self.assertRaisesRegexp(DeclarationError, "No target nor source state is defined for .+", declare)
 
@@ -346,27 +346,9 @@ class TestStateMachineDeclaration(unittest.TestCase):
             def verify(self):
                 return True
 
-            class NormalTransition(Transition):
-                target_state = PlainState
-
-                def move(self):
-                    pass
-
-    def test_initial_transition_without_target_state(self):
-
-        class PlainState(BaseState):
-
-            def verify(self):
-                return True
-
-        class NormalTransition(Transition):
-            source_state = PlainState
-
+            @transition(target_state=PlainState)
             def move(self):
                 pass
-
-        self.assertRaisesRegexp(DeclarationError, "initial transition has no target state",
-                                StateMachineCrawler, None, NormalTransition)
 
 
 class TestStateMachineSerialization(BaseTestStateMachineTransitionCase):

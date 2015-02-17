@@ -1,10 +1,9 @@
 import logging
 import re
-from inspect import isclass
 from collections import defaultdict
 
 from .errors import TransitionError, DeclarationError
-from .blocks import Transition, State
+from .blocks import State
 
 
 LOG = logging.getLogger("state_machine_crawler")
@@ -19,10 +18,11 @@ EDGE_TPL = "%(source)s -> %(target)s [color=%(color)s fontcolor=%(text_color)s l
 
 
 def _equivalent(transition_one, transition_two):
-    if transition_one is transition_two:
-        return True
-    else:
-        return isclass(transition_one) and isclass(transition_two) and issubclass(transition_one, transition_two)
+    if not (transition_one and transition_two):
+        return False
+    p1 = transition_one.source_state == transition_two.source_state
+    p2 = transition_one.target_state == transition_two.target_state
+    return p1 and p2
 
 
 def _find_shortest_path(graph, start, end, path=[], get_cost=len):
@@ -128,37 +128,30 @@ class StateMachineCrawler(object):
 
     system
         All transitions shall change the internal state of this object.
-    initial_transition (subclass of :class:`InitialTransition <state_machine_crawler.InitialTransition>`)
-        The first transition to be executed to move to the initial state
+    initial_state
+        The first real state of the system. It must define a transition from the StateMachineCrawler.EntryPoint.
 
-    >>> scm = StateMachineCrawler(system_object, CustomIntialTransition)
+    >>> scm = StateMachineCrawler(system_object, InitialState)
     """
 
-    def __init__(self, system, initial_transition):
-        if not (isclass(initial_transition) and issubclass(initial_transition, Transition)):
-            raise DeclarationError("initial_transition must be a Transition subclass")
-        if initial_transition.target_state is None:
-            raise DeclarationError("initial transition has no target state")
+    class EntryPoint(State):
 
-        self._system = system
+        def verify(self):  # pragma: no cover
+            return True
+
+    def __init__(self, system, initial_state):
+        if not issubclass(initial_state, State):
+            raise DeclarationError("%r is not a State subclass" % initial_state)
         self.clear()
-        self._initial_transition = initial_transition
-        self._initial_state = initial_transition.target_state
+        self._system = system
+        self._initial_state = initial_state
         self._state_graph = the_map = _create_transition_map(self._initial_state)
 
         for target_states in the_map.itervalues():
             target_states.add(self._initial_state)
 
-        class EntryPoint(State):
-
-            def verify(self):  # pragma: no cover
-                return True
-
-            class Initialize(initial_transition):
-                pass
-
-        self._state_graph[EntryPoint] = {self._initial_state}
-        self._current_state = self._entry_point = EntryPoint
+        self._state_graph[self.EntryPoint] = {self._initial_state}
+        self._current_state = self._entry_point = self.EntryPoint
 
         LOG.info("State machine crawler initialized")
 
@@ -182,11 +175,12 @@ class StateMachineCrawler(object):
         self._current_transition = transition = self._get_transition(self._current_state, next_state)
         try:
             LOG.info("Transition to state %s started", next_state)
-            transition(self._system).move()
+            transition(transition.im_class(self._system))
             LOG.info("Transition to state %s finished", next_state)
             transition_ok = True
         except Exception:
             self._error_transitions.add(transition)
+            self._error_states.add(next_state)
             LOG.exception("Failed to move to: %s", next_state)
             transition_ok = False
         self._visited_transitions.add(transition)
@@ -204,6 +198,7 @@ class StateMachineCrawler(object):
             self._current_state = next_state
             LOG.info("State changed to %s", next_state)
             self._visited_states.add(next_state)
+            self._current_transition = None
         else:
             self._error_states = _get_all_unreachable_nodes(self._state_graph, self._entry_point,
                                                             set.union(self._error_states, {next_state}),
@@ -220,7 +215,7 @@ class StateMachineCrawler(object):
 
     def _get_transition(self, source_state, target_state):
         if target_state is self._initial_state:
-            return self._initial_transition
+            return self.EntryPoint.transition_map[target_state]
         else:
             return source_state.transition_map[target_state]
 
@@ -304,7 +299,7 @@ class StateMachineCrawler(object):
         if state is self._current_state:
             color = "forestgreen"
             text_color = "white"
-        elif state is self._current_transition.target_state:
+        elif self._current_transition and state is self._current_transition.target_state:
             color = "darkkhaki"
             text_color = "black"
         elif state in self._error_states:
@@ -322,8 +317,6 @@ class StateMachineCrawler(object):
         return NODE_TPL % dict(name=state.__name__, label=label, shape=shape, color=color, text_color=text_color)
 
     def _serialize_transition(self, transition):  # pragma: no cover
-        if not transition.source_state:
-            return ""
         if filter(lambda error_transition: _equivalent(transition, error_transition), self._error_transitions):
             color = text_color = "red"
         elif _equivalent(transition, self._current_transition):
@@ -339,8 +332,18 @@ class StateMachineCrawler(object):
         else:
             label = "$%d" % transition.cost
 
-        return EDGE_TPL % dict(source=transition.source_state.__name__,
-                               target=transition.target_state.__name__,
+        if transition.source_state is None:
+            source_state = transition.im_class.__name__
+        else:
+            source_state = transition.source_state.__name__
+
+        if transition.target_state in [None, "self"]:
+            target_state = transition.im_class.__name__
+        else:
+            target_state = transition.target_state.__name__
+
+        return EDGE_TPL % dict(source=source_state,
+                               target=target_state,
                                color=color,
                                label=label,
                                text_color=text_color)

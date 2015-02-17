@@ -1,15 +1,12 @@
-from inspect import isclass
 from abc import ABCMeta, abstractmethod
 
 from .errors import DeclarationError
 
 
-class Transition(object):
-    """ Represents a transformation of the system from one state into another
+def transition(source_state=None, target_state=None, cost=1):
+    """
 
-    Transitions have a *_system* attribute that represents the entity with which transitions' states are associated.
-
-    Class definitions of the transitions must have:
+    Represents a process of moving from source_state to target_state
 
     cost (int)
         Relative *price* of the transition. Transitions that take longer time to run are more *expensive*. The *cost*
@@ -24,35 +21,19 @@ class Transition(object):
 
     Note: there can be only *target_state* or only *source_state* because if a transition from state **A** to state
     **B** is possible it does not at all imply that the opposite transition can be performed the same way.
+
     """
-    __metaclass__ = ABCMeta
-    cost = 1
-    target_state = source_state = None
 
-    def __init__(self, system):
-        self._system = system
+    def wrap(function):
+        def wraped_f(state_instance):
+            function(state_instance)
+        wraped_f.source_state = source_state
+        wraped_f.target_state = target_state
+        wraped_f.cost = cost
+        setattr(wraped_f, "@transition@", True)
+        return wraped_f
 
-    @abstractmethod
-    def move(self):
-        """
-        Performs the actions to move from one state to another.
-        """
-
-    @classmethod
-    def link(cls, target_state=None, source_state=None):
-        """
-        Links an existing transition with a specific state.
-
-        This method exists to avoid creating unnecessary subclasses in the situation when multiple states can perform
-        similar transitions.
-        """
-        tstate = target_state
-        sstate = source_state
-
-        class NewTransition(cls):
-            target_state = tstate or cls.target_state
-            source_state = sstate or cls.source_state
-        return NewTransition
+    return wrap
 
 
 class StateMetaClass(ABCMeta):
@@ -64,23 +45,28 @@ class StateMetaClass(ABCMeta):
         for name in dir(self):
             attr = getattr(self, name)
 
-            if not (isclass(attr) and issubclass(attr, Transition)):
+            if not hasattr(attr, "@transition@"):
                 continue
 
-            class TempTransition(attr):
-                target_state = self if attr.target_state == "self" else attr.target_state
-            TempTransition.__name__ = name
+            if attr.target_state == "self":
+                target = self
+            else:
+                target = attr.target_state
 
-            attr = TempTransition
-            setattr(self, name, TempTransition)
+            source = attr.source_state
 
-            if attr.target_state:
-                attr.source_state = self
-                self.transition_map[attr.target_state] = attr
-            elif attr.source_state:
-                class RelatedTransition(TempTransition):
-                    target_state = self
-                attr.source_state.transition_map[self] = RelatedTransition
+            def _ver(item):
+                return item and item.__name__.startswith("_")
+
+            if _ver(target) or _ver(self) or _ver(source):
+                continue
+
+            if source and target:
+                raise DeclarationError("Only target or source state can be defined for %r " % attr)
+            elif target:
+                self.transition_map[target] = attr
+            elif source:
+                attr.source_state.transition_map[self] = attr
             else:
                 raise DeclarationError("No target nor source state is defined for %r" % attr)
 
