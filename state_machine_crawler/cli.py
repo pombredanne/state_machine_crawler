@@ -51,6 +51,8 @@ def cli(scm):
             state_monitor.start()
         if args.all:
             scm.verify_all_states()
+        elif args.some:
+            scm.verify_all_states(args.some)
         elif args.target_state:
             scm.move(args.target_state)
     except TransitionError, e:

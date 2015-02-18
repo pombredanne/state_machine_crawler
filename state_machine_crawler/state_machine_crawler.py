@@ -220,8 +220,14 @@ class StateMachineCrawler(object):
             self._err(next_state, "verification failure")
 
     def _get_transition(self, source_state, target_state):
-        if target_state is self._initial_state:
-            return self.EntryPoint.transition_map[target_state]
+        if target_state is self.EntryPoint:
+            def tempo(ep_instance):
+                pass
+            tempo.cost = 0
+            tempo.target_state = target_state
+            tempo.source_state = source_state
+            tempo.im_class = source_state
+            return tempo
         else:
             return source_state.transition_map[target_state]
 
@@ -288,9 +294,7 @@ class StateMachineCrawler(object):
                 self.move(state)
             except TransitionError:
                 pass  # we just move on
-        if self._initial_state not in self._error_states:
-            self.move(self._initial_state)
-            self._current_state = self.EntryPoint
+        self.move(self.EntryPoint)
         if self._error_states:
             failed_states = map(str, self._error_states)
             raise TransitionError("Failed to visit the following states: %s" % ", ".join(sorted(failed_states)))
