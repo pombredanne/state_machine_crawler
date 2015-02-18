@@ -22,7 +22,8 @@ def _equivalent(transition_one, transition_two):
         return False
     p1 = transition_one.source_state == transition_two.source_state
     p2 = transition_one.target_state == transition_two.target_state
-    return p1 and p2
+    p3 = transition_one.im_class == transition_two.im_class
+    return p1 and p2 and p3
 
 
 def _find_shortest_path(graph, start, end, path=[], get_cost=len):
@@ -129,7 +130,8 @@ class StateMachineCrawler(object):
     system
         All transitions shall change the internal state of this object.
     initial_state
-        The first real state of the system. It must define a transition from the StateMachineCrawler.EntryPoint.
+        The first real state of the system. It must define a transition from the StateMachineCrawler.EntryPoint
+        otherwise the crawler won't be able to find its way through
 
     >>> scm = StateMachineCrawler(system_object, InitialState)
     """
@@ -172,6 +174,7 @@ class StateMachineCrawler(object):
                                                                                  target_state, msg))
 
     def _do_step(self, next_state):
+        self._next_state = next_state
         self._current_transition = transition = self._get_transition(self._current_state, next_state)
         try:
             LOG.info("Transition to state %s started", next_state)
@@ -199,7 +202,10 @@ class StateMachineCrawler(object):
             LOG.info("State changed to %s", next_state)
             self._visited_states.add(next_state)
             self._current_transition = None
+            self._next_state = None
         else:
+            self._current_transition = None
+            self._next_state = None
             self._error_states = _get_all_unreachable_nodes(self._state_graph, self._entry_point,
                                                             set.union(self._error_states, {next_state}),
                                                             self._transition_exclusion_list)
@@ -299,7 +305,7 @@ class StateMachineCrawler(object):
         if state is self._current_state:
             color = "forestgreen"
             text_color = "white"
-        elif self._current_transition and state is self._current_transition.target_state:
+        elif state is self._next_state:
             color = "darkkhaki"
             text_color = "black"
         elif state in self._error_states:

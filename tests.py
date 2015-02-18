@@ -6,7 +6,7 @@ import mock
 from state_machine_crawler import transition, StateMachineCrawler, DeclarationError, TransitionError, \
     State as BaseState, WebView
 from state_machine_crawler.state_machine_crawler import _create_transition_map, _find_shortest_path, LOG, \
-    _create_transition_map_with_exclusions, _get_missing_nodes, _dfs
+    _create_transition_map_with_exclusions, _get_missing_nodes, _dfs, _equivalent
 
 LOG.handlers = []
 
@@ -360,6 +360,28 @@ class TestStateMachineSerialization(BaseTestStateMachineTransitionCase):
         real_lines = value.replace("}", "};").replace("{", "{;").split(";")
         print value.replace(";", ";\n    ").replace("}", "}\n    ").replace("{", "{\n    ")
         self.assertEqual(sorted(real_lines), sorted(target_lines))
+
+
+class TestTransitionEquivalence(unittest.TestCase):
+
+    def test_subclasses(self):
+
+        class Parent(State):
+            pass
+
+        class Super(State):
+
+            @transition(target_state=Parent)
+            def move(self):
+                pass
+
+        class ChildOne(Super):
+            pass
+
+        class ChildTwo(Super):
+            pass
+
+        self.assertFalse(_equivalent(ChildOne.move, ChildTwo.move))
 
 
 def run_web_view():
