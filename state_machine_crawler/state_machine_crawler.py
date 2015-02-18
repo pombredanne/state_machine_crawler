@@ -327,7 +327,7 @@ class StateMachineCrawler(object):
             color = text_color = "red"
         elif _equivalent(transition, self._current_transition):
             color = text_color = "forestgreen"
-        elif transition in self._visited_transitions:
+        elif filter(lambda visited_transition: _equivalent(transition, visited_transition), self._visited_transitions):
             color = "yellow"
             text_color = "black"
         else:
