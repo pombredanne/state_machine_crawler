@@ -1,3 +1,11 @@
+6.0.0 2015-08-18
+
+    [Anton Berezin <gurunars@gmail.com>]
+        * PATCH: handle only exception subclasses - syntax or runtime errors shall not be caught
+        * MINOR: do not let start/stop the web view once it was already initiated
+        * PATCH: cli
+        * MAJOR: transition is a decorator for a method not a class from now on
+
 5.0.1 2015-02-09
 
     [Anton Berezin <gurunars@gmail.com>]
