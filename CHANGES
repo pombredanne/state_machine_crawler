@@ -1,3 +1,10 @@
+6.0.1 2015-08-18
+
+    [Anton Berezin <gurunars@gmail.com>]
+        * MINOR: fixed a bug with equivalence for current transitions
+        * MINOR: move to entry point after done
+        * MINOR: got rid of _entry_point
+
 6.0.0 2015-08-18
 
     [Anton Berezin <gurunars@gmail.com>]
