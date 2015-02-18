@@ -153,7 +153,7 @@ class StateMachineCrawler(object):
             target_states.add(self._initial_state)
 
         self._state_graph[self.EntryPoint] = {self._initial_state}
-        self._current_state = self._entry_point = self.EntryPoint
+        self._current_state = self.EntryPoint
 
         LOG.info("State machine crawler initialized")
 
@@ -188,7 +188,7 @@ class StateMachineCrawler(object):
             transition_ok = False
         self._visited_transitions.add(transition)
         if not transition_ok:
-            self._current_state = self._entry_point
+            self._current_state = self.EntryPoint
             self._err(next_state, "transition failure")
         try:
             LOG.info("Verification of state %s started", next_state)
@@ -206,7 +206,7 @@ class StateMachineCrawler(object):
         else:
             self._current_transition = None
             self._next_state = None
-            self._error_states = _get_all_unreachable_nodes(self._state_graph, self._entry_point,
+            self._error_states = _get_all_unreachable_nodes(self._state_graph, self.EntryPoint,
                                                             set.union(self._error_states, {next_state}),
                                                             self._transition_exclusion_list)
 
@@ -216,7 +216,7 @@ class StateMachineCrawler(object):
                     self._error_transitions.add(transition)
 
             LOG.error("State verification error for: %s", next_state)
-            self._current_state = self._entry_point
+            self._current_state = self.EntryPoint
             self._err(next_state, "verification failure")
 
     def _get_transition(self, source_state, target_state):
@@ -252,7 +252,7 @@ class StateMachineCrawler(object):
         True
         """
         reachable_state_graph = _create_transition_map_with_exclusions(self._state_graph,
-                                                                       self._entry_point,
+                                                                       self.EntryPoint,
                                                                        self._error_states,
                                                                        self._transition_exclusion_list)
         shortest_path = _find_shortest_path(reachable_state_graph, self._current_state, state, get_cost=self._get_cost)
@@ -290,13 +290,13 @@ class StateMachineCrawler(object):
                 pass  # we just move on
         if self._initial_state not in self._error_states:
             self.move(self._initial_state)
-            self._current_state = self._entry_point
+            self._current_state = self.EntryPoint
         if self._error_states:
             failed_states = map(str, self._error_states)
             raise TransitionError("Failed to visit the following states: %s" % ", ".join(sorted(failed_states)))
 
     def _serialize_state(self, state):  # pragma: no cover
-        if state is self._entry_point:
+        if state is self.EntryPoint:
             shape = "doublecircle"
             label = "+"
         else:
@@ -364,13 +364,13 @@ class StateMachineCrawler(object):
 
         module_map = defaultdict(list)
         for state in all_states:
-            if state is self._entry_point:
+            if state is self.EntryPoint:
                 continue
             module_map[state.__module__].append(state)
 
         rval = ["digraph StateMachine {splines=polyline; concentrate=true; rankdir=LR;"]
 
-        rval.append(self._serialize_state(self._entry_point))
+        rval.append(self._serialize_state(self.EntryPoint))
 
         i = 1
         for module_name, states in module_map.iteritems():
