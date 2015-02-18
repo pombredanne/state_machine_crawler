@@ -158,7 +158,6 @@ class StateMachineCrawler(object):
         LOG.info("State machine crawler initialized")
 
     def clear(self):
-        self._current_transition = None
         self._error_states = set()
         self._visited_states = set()
         self._visited_transitions = set()
@@ -175,18 +174,18 @@ class StateMachineCrawler(object):
 
     def _do_step(self, next_state):
         self._next_state = next_state
-        self._current_transition = transition = self._get_transition(self._current_state, next_state)
+        transition = self._get_transition(self._current_state, next_state)
         try:
             LOG.info("Transition to state %s started", next_state)
             transition(transition.im_class(self._system))
             LOG.info("Transition to state %s finished", next_state)
             transition_ok = True
         except Exception:
-            self._error_transitions.add(transition)
+            self._error_transitions.add((self._current_state, next_state))
             self._error_states.add(next_state)
             LOG.exception("Failed to move to: %s", next_state)
             transition_ok = False
-        self._visited_transitions.add(transition)
+        self._visited_transitions.add((self._current_state, next_state))
         if not transition_ok:
             self._current_state = self.EntryPoint
             self._err(next_state, "transition failure")
@@ -201,19 +200,17 @@ class StateMachineCrawler(object):
             self._current_state = next_state
             LOG.info("State changed to %s", next_state)
             self._visited_states.add(next_state)
-            self._current_transition = None
             self._next_state = None
         else:
-            self._current_transition = None
             self._next_state = None
             self._error_states = _get_all_unreachable_nodes(self._state_graph, self.EntryPoint,
                                                             set.union(self._error_states, {next_state}),
-                                                            self._transition_exclusion_list)
+                                                            self._error_transitions)
 
             # mark all outgoing transitions from error states as impossible
             for state in self._error_states:
                 for transition in state.transition_map.itervalues():
-                    self._error_transitions.add(transition)
+                    self._error_transitions.add((state, transition.target_state))
 
             LOG.error("State verification error for: %s", next_state)
             self._current_state = self.EntryPoint
@@ -230,13 +227,6 @@ class StateMachineCrawler(object):
             return tempo
         else:
             return source_state.transition_map[target_state]
-
-    @property
-    def _transition_exclusion_list(self):
-        transition_exclusion_list = set()
-        for transition in self._error_transitions:
-            transition_exclusion_list.add((transition.source_state, transition.target_state))
-        return transition_exclusion_list
 
     def _get_cost(self, states):
         """ Returns a cumulative cost of the whole chain of transitions """
@@ -260,7 +250,7 @@ class StateMachineCrawler(object):
         reachable_state_graph = _create_transition_map_with_exclusions(self._state_graph,
                                                                        self.EntryPoint,
                                                                        self._error_states,
-                                                                       self._transition_exclusion_list)
+                                                                       self._error_transitions)
         shortest_path = _find_shortest_path(reachable_state_graph, self._current_state, state, get_cost=self._get_cost)
         if shortest_path is None:
             raise TransitionError("There is no way to achieve state %r" % state)
@@ -326,34 +316,24 @@ class StateMachineCrawler(object):
             text_color = "black"
         return NODE_TPL % dict(name=state.__name__, label=label, shape=shape, color=color, text_color=text_color)
 
-    def _serialize_transition(self, transition):  # pragma: no cover
-        if filter(lambda error_transition: _equivalent(transition, error_transition), self._error_transitions):
+    def _serialize_transition(self, source_state, target_state, cost):  # pragma: no cover
+        if (source_state, target_state) in self._error_transitions:
             color = text_color = "red"
-        elif _equivalent(transition, self._current_transition):
+        elif self._current_state is source_state and self._next_state is target_state:
             color = text_color = "forestgreen"
-        elif filter(lambda visited_transition: _equivalent(transition, visited_transition), self._visited_transitions):
+        elif (source_state, target_state) in self._visited_transitions:
             color = "yellow"
             text_color = "black"
         else:
             color = text_color = "black"
 
-        if transition.cost == 1:
+        if cost == 1:
             label = " "
         else:
-            label = "$%d" % transition.cost
+            label = "$%d" % cost
 
-        if transition.source_state is None:
-            source_state = transition.im_class.__name__
-        else:
-            source_state = transition.source_state.__name__
-
-        if transition.target_state in [None, "self"]:
-            target_state = transition.im_class.__name__
-        else:
-            target_state = transition.target_state.__name__
-
-        return EDGE_TPL % dict(source=source_state,
-                               target=target_state,
+        return EDGE_TPL % dict(source=source_state.__name__,
+                               target=target_state.__name__,
                                color=color,
                                label=label,
                                text_color=text_color)
@@ -387,8 +367,8 @@ class StateMachineCrawler(object):
             i += 1
 
         for state in all_states:
-            for transition in state.transition_map.itervalues():
-                rval.append(self._serialize_transition(transition))
+            for target_state, transition in state.transition_map.iteritems():
+                rval.append(self._serialize_transition(state, target_state, transition.cost))
 
         rval.append("}")
 

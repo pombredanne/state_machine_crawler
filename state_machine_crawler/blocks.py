@@ -48,12 +48,11 @@ class StateMetaClass(ABCMeta):
             if not hasattr(attr, "@transition@"):
                 continue
 
-            if attr.target_state == "self":
-                target = self
-            else:
-                target = attr.target_state
-
+            target = attr.target_state
             source = attr.source_state
+
+            if target == "self":
+                target = self
 
             def _ver(item):
                 return item and item.__name__.startswith("_")
