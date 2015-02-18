@@ -150,7 +150,7 @@ class StateMachineCrawler(object):
         self._state_graph = the_map = _create_transition_map(self._initial_state)
 
         for target_states in the_map.itervalues():
-            target_states.add(self._initial_state)
+            target_states.add(self.EntryPoint)
 
         self._state_graph[self.EntryPoint] = {self._initial_state}
         self._current_state = self.EntryPoint
