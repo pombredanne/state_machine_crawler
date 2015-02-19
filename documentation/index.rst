@@ -22,8 +22,7 @@ from one state to another.
 .. autoclass:: state_machine_crawler.State
     :members:
 
-.. autoclass:: state_machine_crawler.Transition
-    :members:
+.. autofunction:: state_machine_crawler.transition
 
 The crawler
 -----------
@@ -38,10 +37,19 @@ Error class
 
 .. autoclass:: state_machine_crawler.TransitionError
 
-Graph visualization
--------------------
+State graph visualization
+-------------------------
 
 When state machine gets big it might become difficult to monitor state transitions within it. In such a case a
 *WebView* class should be used:
 
 .. autoclass:: state_machine_crawler.WebView
+
+Command line interface
+----------------------
+
+In most common case the developer wants to be able to manipulate the
+`SUT <http://en.wikipedia.org/wiki/System_under_test>`_ without launching python emulator and just use some sort of
+command line utility. The package provides the following function:
+
+.. autofunction:: state_machine_crawler.cli

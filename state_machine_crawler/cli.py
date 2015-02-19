@@ -7,6 +7,40 @@ from .webview import WebView
 
 
 def cli(scm):
+    """
+
+    scm(:class:`StateMachineCrawler <state_machine_crawler.StateMachineCrawler>` instance)
+        State machine to be given a command line interface
+
+    Available command line arguments:
+
+    *-t, --target-state*
+        State to which the system should be transitioned
+    *-a, --all*
+        Exercise all states
+    *-s, --some*
+        Exercise all state names of which match a regexp
+    *-w, --with-webview*
+        Indicates if webview should be started
+    *-c, --current-state*
+        If it is known that the system is in specific state - it is possible to specify it and avoid extra transitions
+    *-d, --debug*
+        Outputs a detailed transition log
+
+    NOTE: *-t*, *-a* and *-s* arguments are mutually exclusive
+
+    Sample code:
+
+    .. code:: python
+
+        ...
+
+        scm = StateMachineCrawler(InitialState)
+
+        if __name__ == "__main__":
+            cli(scm)
+
+    """
 
     def existing_state(name):
         states = dict(map(lambda state: (state.full_name, state), scm._state_graph.keys()))
@@ -26,7 +60,7 @@ def cli(scm):
     group.add_argument("-t", "--target-state", help="State to which the system should be transitioned",
                        type=existing_state)
     group.add_argument("-a", "--all", action="store_true", help="Exercise all states")
-    group.add_argument("-s", "--some", help="Exercise all states names of which match a regexp")
+    group.add_argument("-s", "--some", help="Exercise all state names of which match a regexp")
     parser.add_argument("-w", "--with-webview", action="store_true", help="Indicates if webview should be started")
     parser.add_argument("-c", "--current-state", type=existing_state,
                         help="If it is known that the system is in specific state - it is possible to specify it and"
@@ -43,7 +77,7 @@ def cli(scm):
     state_monitor = WebView(scm)
 
     def _stop():
-        time.sleep(1)  # to make sure that the monitor reflects the final state of the system
+        time.sleep(0.5)  # to make sure that the monitor reflects the final state of the system
         state_monitor.stop()
 
     try:

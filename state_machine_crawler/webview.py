@@ -26,8 +26,8 @@ class SilentHandler(WSGIRequestHandler):
 class WebView(object):
     """
 
-    cost (state_machine):
-        :class:`StateMachineCrawler <state_machine_crawler.StateMachineCrawler>` instance
+    state_machine(:class:`StateMachineCrawler <state_machine_crawler.StateMachineCrawler>` instance)
+        State machine to be monitored
 
     Sample usage:
 

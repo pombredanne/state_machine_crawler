@@ -6,7 +6,7 @@ from .errors import DeclarationError
 def transition(source_state=None, target_state=None, cost=1):
     """
 
-    Represents a process of moving from source_state to target_state
+    A decorator that represents a process of moving from source_state to target_state
 
     cost (int)
         Relative *price* of the transition. Transitions that take longer time to run are more *expensive*. The *cost*
@@ -21,6 +21,27 @@ def transition(source_state=None, target_state=None, cost=1):
 
     Note: there can be only *target_state* or only *source_state* because if a transition from state **A** to state
     **B** is possible it does not at all imply that the opposite transition can be performed the same way.
+
+    Sample usage:
+
+    .. code:: python
+
+        class ParentState(State):
+
+            ...
+
+
+        class YourState(State):
+
+            ...
+
+            @transition(source_state=ParentState)
+            def come_from_parent(self):
+                ...
+
+            @transition(target_state=ParentState, cost=3)
+            def go_to_parent(self):
+                ...
 
     """
 
