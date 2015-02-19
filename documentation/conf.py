@@ -34,3 +34,14 @@ release = version
 exclude_patterns = ['_build']
 pygments_style = 'sphinx'
 htmlhelp_basename = 'StateMachineCrawlerDoc'
+
+from mock import MagicMock
+
+class Mock(MagicMock):
+
+    @classmethod
+    def __getattr__(cls, name):
+        return Mock()
+
+MOCK_MODULES = ['wekzeug', 'pydot2']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
