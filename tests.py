@@ -383,6 +383,9 @@ class TestTransitionEquivalence(unittest.TestCase):
 
         self.assertFalse(_equivalent(ChildOne.move, ChildTwo.move))
 
+    def test_missing_transitions(self):
+        self.assertFalse(_equivalent(None, None))
+
 
 def run_web_view():
 
