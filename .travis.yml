@@ -12,4 +12,4 @@ deploy:
   on:
     branch: master
   password:
-    secure: L9TWyUBZ+nUXf+s3fRoa+IEqev/dhhr9sM+OIuODsnegd/sNvPsUTpr2pZoMil/R7zJXGm+xh0Pz/RD7FyDH/YIX1IJksqIyDn0C6L6I6oVqoBredemaoWbdvsy0hiditpd9KJg3N3GLaIW+pxiBJ6sPH+0zeWsYb+PwOuHccr8=
+    secure: V6SnUvJVDBCCbcHT+t0NjZA7PrgaZNMjP0BYsFS4xid+U0RX+g/MpdcHJK/NWK/ZqY6EdmCQLbQn/M79UhIHTllta2wLrnUa7YkqjVkUkdGkjf9/Ki2PDS607mmGZxYZ4qIOCt6yS590iSoh/QZ6Gykc6LVkO3aZx8C64H+YIig=
