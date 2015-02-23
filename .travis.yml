@@ -4,12 +4,12 @@ python:
 script: ./setup.py nosetests
 branches:
   only:
-    - master
-    - dev
+  - master
+  - dev
 deploy:
   provider: pypi
   user: gurunars
   on:
     branch: master
   password:
-    secure: VOlpaICOkhyxiMUOctf8SV3jXIcv4cBHchxrk0ylXAKcw5HU1x0zgsA/5C46KKgtRZzgHie56VnKZ+G8wYz9rYEEfqJIHyy6lUqS9UXF3tmpHk3jbWMgdEYg6J3sdx5/coWmkVs1uGExoUpN5WEJllUrgSlbbaVwu76cKs/alQc=
+    secure: L9TWyUBZ+nUXf+s3fRoa+IEqev/dhhr9sM+OIuODsnegd/sNvPsUTpr2pZoMil/R7zJXGm+xh0Pz/RD7FyDH/YIX1IJksqIyDn0C6L6I6oVqoBredemaoWbdvsy0hiditpd9KJg3N3GLaIW+pxiBJ6sPH+0zeWsYb+PwOuHccr8=
