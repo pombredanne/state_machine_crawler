@@ -1,6 +1,5 @@
 import logging
 import re
-from collections import defaultdict
 
 from .errors import TransitionError, DeclarationError
 from .blocks import State
@@ -12,9 +11,6 @@ ch = logging.StreamHandler()
 ch.setFormatter(logging.Formatter("%(message)s"))
 
 LOG.addHandler(ch)
-
-NODE_TPL = "%(name)s [style=filled label=\"%(label)s\" shape=%(shape)s fillcolor=%(color)s fontcolor=%(text_color)s];"
-EDGE_TPL = "%(source)s -> %(target)s [color=%(color)s fontcolor=%(text_color)s label=\"%(label)s\"];"
 
 
 def _equivalent(transition_one, transition_two):
@@ -288,88 +284,3 @@ class StateMachineCrawler(object):
         if self._error_states:
             failed_states = map(str, self._error_states)
             raise TransitionError("Failed to visit the following states: %s" % ", ".join(sorted(failed_states)))
-
-    def _serialize_state(self, state):  # pragma: no cover
-        if state is self.EntryPoint:
-            shape = "doublecircle"
-            label = "+"
-        else:
-            shape = "box"
-            label = state.__name__
-        if state is self._current_state:
-            color = "forestgreen"
-            text_color = "white"
-        elif state is self._next_state:
-            color = "darkkhaki"
-            text_color = "black"
-        elif state in self._error_states:
-            if state in self._visited_states:
-                color = "orange"
-            else:
-                color = "red"
-            text_color = "black"
-        elif state in self._visited_states:
-            color = "yellow"
-            text_color = "black"
-        else:
-            color = "white"
-            text_color = "black"
-        return NODE_TPL % dict(name=state.__name__, label=label, shape=shape, color=color, text_color=text_color)
-
-    def _serialize_transition(self, source_state, target_state, cost):  # pragma: no cover
-        if (source_state, target_state) in self._error_transitions:
-            color = text_color = "red"
-        elif self._current_state is source_state and self._next_state is target_state:
-            color = text_color = "forestgreen"
-        elif (source_state, target_state) in self._visited_transitions:
-            color = "yellow"
-            text_color = "black"
-        else:
-            color = text_color = "black"
-
-        if cost == 1:
-            label = " "
-        else:
-            label = "$%d" % cost
-
-        return EDGE_TPL % dict(source=source_state.__name__,
-                               target=target_state.__name__,
-                               color=color,
-                               label=label,
-                               text_color=text_color)
-
-    def __repr__(self):
-        # TODO: implement .dot graph generation here without pydot dependency
-        all_states = set()
-        for source_state, target_states in self._state_graph.iteritems():
-            all_states.add(source_state)
-            for st in target_states:
-                all_states.add(st)
-
-        module_map = defaultdict(list)
-        for state in all_states:
-            if state is self.EntryPoint:
-                continue
-            module_map[state.__module__].append(state)
-
-        rval = ["digraph StateMachine {splines=polyline; concentrate=true; rankdir=LR;"]
-
-        rval.append(self._serialize_state(self.EntryPoint))
-
-        i = 1
-        for module_name, states in module_map.iteritems():
-            cluster_name = module_name.split(".")[-1]
-            cluster_data = ["subgraph cluster_%d {label=\"%s\";color=blue;fontcolor=blue;" % (i, cluster_name)]
-            for state in states:
-                cluster_data.append(self._serialize_state(state))
-            cluster_data.append("}")
-            rval.append("".join(cluster_data))
-            i += 1
-
-        for state in all_states:
-            for target_state, transition in state.transition_map.iteritems():
-                rval.append(self._serialize_transition(state, target_state, transition.cost))
-
-        rval.append("}")
-
-        return "".join(rval)

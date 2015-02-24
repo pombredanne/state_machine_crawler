@@ -11,7 +11,7 @@ from werkzeug.wrappers import Response, Request
 from werkzeug.routing import Map, Rule
 from werkzeug.wsgi import wrap_file
 
-import pydot
+from .svg_serializer import Serializer
 
 
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -50,7 +50,7 @@ class WebView(object):
     HOST = 'localhost'
 
     def __init__(self, state_machine):
-        self._state_machine = state_machine
+        self._serializer = Serializer(state_machine)
         self._viewer_thread = threading.Thread(target=self._run_server)
         self._alive = False
         self._server = None
@@ -65,10 +65,8 @@ class WebView(object):
         self._url_map = Map(url_map)
 
     def _graph(self, request):
-        dot = repr(self._state_machine)
-        graph = pydot.graph_from_dot_data(dot)
-        resp = Response(graph.create_svg())
-        resp.mimetype = "image/svg+xml"
+        resp = Response(repr(self._serializer))
+        resp.mimetype = self._serializer.mimetype
         return resp
 
     def _static(self, request, path):

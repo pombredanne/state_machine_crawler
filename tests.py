@@ -7,6 +7,7 @@ from state_machine_crawler import transition, StateMachineCrawler, DeclarationEr
     State as BaseState, WebView
 from state_machine_crawler.state_machine_crawler import _create_transition_map, _find_shortest_path, LOG, \
     _create_transition_map_with_exclusions, _get_missing_nodes, _dfs, _equivalent
+from state_machine_crawler.dot_serializer import Serializer
 
 LOG.handlers = []
 
@@ -355,7 +356,7 @@ class TestStateMachineSerialization(BaseTestStateMachineTransitionCase):
 
     def test_repr(self):
         self.smc.move(StateTwo)
-        value = repr(self.smc)
+        value = repr(Serializer(self.smc))
         target_lines = DOT_GRAPH.replace("\n", "").replace("    ", "").replace("}", "};").replace("{", "{;").split(";")
         real_lines = value.replace("}", "};").replace("{", "{;").split(";")
         print value.replace(";", ";\n    ").replace("}", "}\n    ").replace("{", "{\n    ")
