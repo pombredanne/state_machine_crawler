@@ -1,9 +1,24 @@
 import argparse
 import time
 import logging
+import os
 
 from .state_machine_crawler import TransitionError, LOG
 from .webview import WebView
+from .svg_serializer import Serializer as SvgSerializer
+from .text_serializer import Serializer as TextSerializer
+
+
+def path_in_existing_directory(path):
+    path = os.path.abspath(os.path.expanduser(path))
+    dirname = os.path.dirname(path)
+    if not os.path.exists(dirname):
+        raise argparse.ArgumentTypeError("Directory %r does not exist" % dirname)
+    if not os.path.isdir(dirname):
+        raise argparse.ArgumentTypeError("%r is not a directory" % dirname)
+    if not os.access(dirname, os.W_OK):
+        raise argparse.ArgumentTypeError("Directory %r is not writable" % dirname)
+    return path
 
 
 def cli(scm):
@@ -26,6 +41,11 @@ def cli(scm):
         If it is known that the system is in specific state - it is possible to specify it and avoid extra transitions
     *-d, --debug*
         Outputs a detailed transition log
+    *--text*
+        In the end of transition operations stores state machine's info in a text file @ desired location
+    *--svg*
+        In the end of transition operations stores state machine's info as an svg image @ desired location
+
 
     NOTE: *-t*, *-a* and *-s* arguments are mutually exclusive
 
@@ -66,6 +86,12 @@ def cli(scm):
                         help="If it is known that the system is in specific state - it is possible to specify it and"
                         " avoid extra transitions")
     parser.add_argument("-d", "--debug", action="store_true", help="print debug messages to stderr")
+    parser.add_argument("--text", type=path_in_existing_directory,
+                        help="In the end of transition operations stores state machine's info in a text file "
+                             "@ desired location")
+    parser.add_argument("--svg", type=path_in_existing_directory,
+                        help="In the end of transition operations stores state machine's info as an svg image "
+                             "@ desired location")
     args = parser.parse_args()
 
     if args.current_state:
@@ -96,3 +122,11 @@ def cli(scm):
     finally:
         _stop()
     _stop()
+
+    if args.text:
+        with open(args.text, "w") as fil:
+            fil.write(repr(TextSerializer(scm)))
+
+    if args.svg:
+        with open(args.svg, "w") as fil:
+            fil.write(repr(SvgSerializer(scm)))
