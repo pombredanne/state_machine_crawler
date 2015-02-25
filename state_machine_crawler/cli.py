@@ -89,6 +89,8 @@ def cli(scm):
             scm.verify_all_states(args.some)
         elif args.target_state:
             scm.move(args.target_state)
+        else:
+            parser.print_help()
     except TransitionError, e:
         print e
     finally:
