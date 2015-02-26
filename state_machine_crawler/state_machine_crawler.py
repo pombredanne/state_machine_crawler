@@ -249,6 +249,10 @@ class StateMachineCrawler(object):
         >>> scm.state is StateOne
         True
         """
+        if state is self.EntryPoint:
+            self._current_state = state
+            self._next_state = None
+            return
         reachable_state_graph = _create_transition_map_with_exclusions(self._state_graph,
                                                                        self.EntryPoint,
                                                                        self._error_states,
