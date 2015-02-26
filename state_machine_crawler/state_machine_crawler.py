@@ -158,6 +158,7 @@ class StateMachineCrawler(object):
         self._visited_states = set()
         self._visited_transitions = set()
         self._error_transitions = set()
+        self._history = []
 
     @property
     def state(self):
@@ -165,10 +166,13 @@ class StateMachineCrawler(object):
         return self._current_state
 
     def _err(self, target_state, msg):
-        raise TransitionError("Move from state %r to state %r has failed: %s" % (self._current_state,
-                                                                                 target_state, msg))
+        text = "Move from state %r to state %r has failed: %s." % (self._current_state, target_state, msg)
+        text += " History: %s" % " -> ".join([hist.full_name for hist in self._history])
+        raise TransitionError(text)
 
     def _do_step(self, next_state):
+        if self._current_state is self.EntryPoint:
+            self._history = []
         self._next_state = next_state
         transition = self._get_transition(self._current_state, next_state)
         try:
@@ -194,6 +198,7 @@ class StateMachineCrawler(object):
             verification_ok = False
         if verification_ok:
             self._current_state = next_state
+            self._history.append(next_state)
             LOG.info("State changed to %s", next_state)
             self._visited_states.add(next_state)
             self._next_state = None
