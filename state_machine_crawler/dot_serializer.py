@@ -38,7 +38,8 @@ class Serializer(object):
         return NODE_TPL % dict(name=state.__name__, label=label, shape=shape, color=color, text_color=text_color)
 
     def _serialize_transition(self, source_state, target_state, cost):  # pragma: no cover
-        if (source_state, target_state) in self._scm._error_transitions:
+        if (source_state, target_state) in self._scm._error_transitions or source_state in self._scm._error_states or \
+                target_state in self._scm._error_transitions:
             color = text_color = "red"
         elif self._scm._current_state is source_state and self._scm._next_state is target_state:
             color = text_color = "forestgreen"
