@@ -32,6 +32,7 @@ def cli(scm):
         State machine to be given a command line interface
 
     Available command line arguments:
+
     *-p, --transition_path*
         A path to a file with a chain of states to visit.
         The states must be delimited by '->'. E.g. 'A -> B -> C -> D -> Z'.
@@ -50,14 +51,14 @@ def cli(scm):
         If it is known that the system is in specific state - it is possible to specify it and avoid extra transitions
     *-d, --debug*
         Outputs a detailed transition log
-    *--with-flag*
-        Stores current state of the device to avoid usage of '-c' argument
+    *--without-flag*
+        Set it to avoid storing the current state of the device in a file
     *--text*
         In the end of transition operations stores state machine's info in a text file @ desired location
     *--svg*
         In the end of transition operations stores state machine's info as an svg image @ desired location
 
-    NOTE: *-t*, *-a*, *-f*, *-s* and *transition_path* arguments are all mutually exclusive
+    NOTE: *-t*, *-a*, *-f*, *-s* and *-p* arguments are mutually exclusive
 
     Sample code:
 
@@ -105,7 +106,7 @@ def cli(scm):
     parser.add_argument("--text", type=path_in_existing_directory,
                         help="In the end of transition operations stores state machine's info in a text file "
                              "@ desired location")
-    parser.add_argument("--with-flag", action="store_true",
+    parser.add_argument("--without-flag", action="store_false", dest="with_flag", default=True,
                         help="Stores current state of the device to avoid usage of '-c' argument."
                              " '-c' overrides the flag.")
     parser.add_argument("--svg", type=path_in_existing_directory,
