@@ -39,8 +39,11 @@ class Serializer(object):
 
     def _serialize_transition(self, source_state, target_state, cost):  # pragma: no cover
         if (source_state, target_state) in self._scm._error_transitions or source_state in self._scm._error_states or \
-                target_state in self._scm._error_transitions:
-            color = text_color = "red"
+                target_state in self._scm._error_states:
+            if (source_state, target_state) in self._scm._visited_transitions:
+                color = text_color = "orange"
+            else:
+                color = text_color = "red"
         elif self._scm._current_state is source_state and self._scm._next_state is target_state:
             color = text_color = "forestgreen"
         elif (source_state, target_state) in self._scm._visited_transitions:
