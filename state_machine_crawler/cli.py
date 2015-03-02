@@ -106,7 +106,7 @@ def cli(scm):
     parser.add_argument("--text", type=path_in_existing_directory,
                         help="In the end of transition operations stores state machine's info in a text file "
                              "@ desired location")
-    parser.add_argument("--without-flag", action="store_false", dest="with_flag", default=True,
+    parser.add_argument("--without-flag", action="store_true",
                         help="Stores current state of the device to avoid usage of '-c' argument."
                              " '-c' overrides the flag.")
     parser.add_argument("--svg", type=path_in_existing_directory,
@@ -114,7 +114,7 @@ def cli(scm):
                              "@ desired location")
     args = parser.parse_args()
 
-    if args.with_flag:
+    if not args.without_flag:
         if os.path.exists(FLAG_FILE):
             with open(FLAG_FILE) as fil:
                 scm._current_state = existing_state(fil.read())
@@ -155,7 +155,7 @@ def cli(scm):
         _stop()
     _stop()
 
-    if args.with_flag:
+    if not args.without_flag:
         with open(FLAG_FILE, "w") as fil:
             fil.write(scm._current_state.full_name)
 
