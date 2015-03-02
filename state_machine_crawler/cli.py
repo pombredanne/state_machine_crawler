@@ -2,6 +2,7 @@ import argparse
 import time
 import logging
 import os
+import sys
 
 from .state_machine_crawler import TransitionError, LOG
 from .webview import WebView
@@ -31,7 +32,10 @@ def cli(scm):
         State machine to be given a command line interface
 
     Available command line arguments:
-
+    *-p, --transition_path*
+        A path to a file with a chain of states to visit.
+        The states must be delimited by '->'. E.g. 'A -> B -> C -> D -> Z'.
+        It may be a standard input itself i.e. directed via a pipe.
     *-t, --target-state*
         State to which the system should be transitioned
     *-a, --all*
@@ -53,8 +57,7 @@ def cli(scm):
     *--svg*
         In the end of transition operations stores state machine's info as an svg image @ desired location
 
-
-    NOTE: *-t*, *-a* and *-s* arguments are mutually exclusive
+    NOTE: *-t*, *-a*, *-f*, *-s* and *transition_path* arguments are all mutually exclusive
 
     Sample code:
 
@@ -84,6 +87,10 @@ def cli(scm):
 
     parser = argparse.ArgumentParser(description='Manipulate the state machine')
     group = parser.add_mutually_exclusive_group()
+    group.add_argument("-p", "--transition-path", type=argparse.FileType('r'), default=sys.stdin,
+                       help="A path to a file with a chain of states to visit. "
+                            "The states must be delimited by '->'. E.g. 'A -> B -> C -> D -> Z'. "
+                            "It may be a standard input itself i.e. directed via a pipe.")
     group.add_argument("-t", "--target-state", help="State to which the system should be transitioned",
                        type=existing_state)
     group.add_argument("-a", "--all", action="store_true", help="Exercise all states")
@@ -134,6 +141,11 @@ def cli(scm):
             scm.verify_all_states(args.some)
         elif args.target_state:
             scm.move(args.target_state)
+        elif args.transition_path:
+            states = [existing_state(state.strip()) for state in args.transition_path.read().split("->")]
+            scm.move(states[0])
+            for state in states[1:]:
+                scm._do_step(state)
         else:
             parser.print_help()
     except TransitionError, e:
