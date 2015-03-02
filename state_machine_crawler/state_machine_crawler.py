@@ -216,7 +216,6 @@ class StateMachineCrawler(object):
                 for transition in state.transition_map.itervalues():
                     self._error_transitions.add((state, transition.target_state))
 
-            LOG.error("State verification error for: %s", next_state)
             self._current_state = self.EntryPoint
             self._err(next_state, "verification failure")
 
@@ -312,7 +311,8 @@ class StateMachineCrawler(object):
 
             for transition in unexecuted_transitions:
                 try:
-                    self.move(transition[0])
+                    if transition[0] != self._current_state:
+                        self.move(transition[0])
                     self._do_step(transition[1])
                 except TransitionError:  # pragma: no cover
                     pass  # we just move on
