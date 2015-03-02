@@ -313,5 +313,5 @@ class StateMachineCrawler(object):
             try:
                 self.move(transition[0])
                 self._do_step(transition[1])
-            except TransitionError:
+            except TransitionError: # pragma: no cover
                 pass  # we just move on

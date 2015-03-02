@@ -9,6 +9,9 @@ from .svg_serializer import Serializer as SvgSerializer
 from .text_serializer import Serializer as TextSerializer
 
 
+FLAG_FILE = ".state_machine_crawler.flag"
+
+
 def path_in_existing_directory(path):
     path = os.path.abspath(os.path.expanduser(path))
     dirname = os.path.dirname(path)
@@ -43,6 +46,8 @@ def cli(scm):
         If it is known that the system is in specific state - it is possible to specify it and avoid extra transitions
     *-d, --debug*
         Outputs a detailed transition log
+    *--with-flag*
+        Stores current state of the device to avoid usage of '-c' argument
     *--text*
         In the end of transition operations stores state machine's info in a text file @ desired location
     *--svg*
@@ -93,10 +98,18 @@ def cli(scm):
     parser.add_argument("--text", type=path_in_existing_directory,
                         help="In the end of transition operations stores state machine's info in a text file "
                              "@ desired location")
+    parser.add_argument("--with-flag", action="store_true",
+                        help="Stores current state of the device to avoid usage of '-c' argument."
+                             " '-c' overrides the flag.")
     parser.add_argument("--svg", type=path_in_existing_directory,
                         help="In the end of transition operations stores state machine's info as an svg image "
                              "@ desired location")
     args = parser.parse_args()
+
+    if args.with_flag:
+        if os.path.exists(FLAG_FILE):
+            with open(FLAG_FILE) as fil:
+                scm._current_state = existing_state(fil.read())
 
     if args.current_state:
         scm._current_state = args.current_state
@@ -128,6 +141,10 @@ def cli(scm):
     finally:
         _stop()
     _stop()
+
+    if args.with_flag:
+        with open(FLAG_FILE, "w") as fil:
+            fil.write(scm._current_state.full_name)
 
     if args.text:
         with open(args.text, "w") as fil:
