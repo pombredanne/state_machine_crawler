@@ -180,14 +180,16 @@ class StateMachineCrawler(object):
             LOG.info("Transition to state %s started", next_state)
             transition(transition.im_class(self._system))
             LOG.info("Transition to state %s finished", next_state)
+            self._visited_transitions.add((self._current_state, next_state))
             transition_ok = True
         except Exception:
             self._error_transitions.add((self._current_state, next_state))
-            self._error_states.add(next_state)
             LOG.exception("Failed to move to: %s", next_state)
             transition_ok = False
-        self._visited_transitions.add((self._current_state, next_state))
         if not transition_ok:
+            self._error_states = _get_all_unreachable_nodes(self._state_graph, self.EntryPoint,
+                                                            set.union(self._error_states, {next_state}),
+                                                            self._error_transitions)
             self._current_state = self.EntryPoint
             self._err(next_state, "transition failure")
         try:
