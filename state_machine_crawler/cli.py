@@ -35,6 +35,8 @@ def cli(scm):
         Exercise all states
     *-s, --some*
         Exercise all state names of which match a regexp
+    *-f, --full*
+        Exercise not only all states but also all transitions
     *-w, --with-webview*
         Indicates if webview should be started
     *-c, --current-state*
@@ -81,6 +83,8 @@ def cli(scm):
                        type=existing_state)
     group.add_argument("-a", "--all", action="store_true", help="Exercise all states")
     group.add_argument("-s", "--some", help="Exercise all state names of which match a regexp")
+    group.add_argument("-f", "--full", action="store_true",
+                       help="Exercise not only all states but also all transitions")
     parser.add_argument("-w", "--with-webview", action="store_true", help="Indicates if webview should be started")
     parser.add_argument("-c", "--current-state", type=existing_state,
                         help="If it is known that the system is in specific state - it is possible to specify it and"
@@ -111,6 +115,8 @@ def cli(scm):
             state_monitor.start()
         if args.all:
             scm.verify_all_states()
+        elif args.full:
+            scm.verify_all_states(full=True)
         elif args.some:
             scm.verify_all_states(args.some)
         elif args.target_state:

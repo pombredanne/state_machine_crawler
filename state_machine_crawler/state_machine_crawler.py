@@ -249,10 +249,6 @@ class StateMachineCrawler(object):
         >>> scm.state is StateOne
         True
         """
-        if state is self.EntryPoint:
-            self._current_state = state
-            self._next_state = None
-            return
         reachable_state_graph = _create_transition_map_with_exclusions(self._state_graph,
                                                                        self.EntryPoint,
                                                                        self._error_states,
@@ -267,11 +263,12 @@ class StateMachineCrawler(object):
         for next_state in next_states:
             self._do_step(next_state)
 
-    def verify_all_states(self, pattern=None):
+    def verify_all_states(self, pattern=None, full=False):
         """
         Makes sure that all states can be visited. It uses a depth first search to find the somewhat the quickest path.
 
         @pattern (str=None): visits only the states full names of which match the pattern
+        @full (bool=False): if True, not only all states are visited but also all transitions are exercised
         """
         all_states_to_check = _dfs(self._state_graph, self._initial_state)
 
@@ -294,3 +291,27 @@ class StateMachineCrawler(object):
         if self._error_states:
             failed_states = map(str, self._error_states)
             raise TransitionError("Failed to visit the following states: %s" % ", ".join(sorted(failed_states)))
+
+        if not full:
+            return
+
+        unexecuted_transitions = set()
+        for source_state, target_states in self._state_graph.iteritems():
+            for target_state in target_states:
+                transition = (source_state, target_state)
+                if transition not in set.union(self._error_transitions, self._visited_transitions):
+                    if target_state is self.EntryPoint:
+                        continue
+                    if pattern and not (re.match(pattern, source_state.full_name) and
+                                        re.match(pattern, target_state.full_name)):
+                        continue
+                    unexecuted_transitions.add(transition)
+
+        # TODO: find the most optimal way to execute the rest of transitions
+
+        for transition in unexecuted_transitions:
+            try:
+                self.move(transition[0])
+                self._do_step(transition[1])
+            except TransitionError:
+                pass  # we just move on

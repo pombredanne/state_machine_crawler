@@ -257,14 +257,14 @@ class PositiveTestStateMachineTransitionTest(BaseTestStateMachineTransitionCase)
         self.assertEqual(self.target.reset.call_count, 1)
 
     def test_all(self):
-        self.smc.verify_all_states()
+        self.smc.verify_all_states(full=True)
         visited_states = map(lambda item: item[0][0], self.target.visited.call_args_list)
         self.assertEqual(set(visited_states),
                          set(['StateTwo', 'StateThreeVariantOne', 'StateFour', 'InitialState', 'StateOne',
                               'StateThreeVariantTwo']))
 
     def test_some(self):
-        self.smc.verify_all_states(pattern=".*StateOne")
+        self.smc.verify_all_states(pattern=".*StateOne", full=True)
         visited_states = map(lambda item: item[0][0], self.target.visited.call_args_list)
         self.assertEqual(set(visited_states), set(['InitialState', 'StateOne']))
 
