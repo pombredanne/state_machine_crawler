@@ -19,15 +19,12 @@ class StateLogger(object):
 
     def __init__(self, debug=False):
         self._debug = debug
-        self._clear_len = 0
 
     def make_debug(self):
         self._debug = True
 
     def _pr(self):
         if self._debug:
-            sys.stdout.write(u"\r" + " " * self._clear_len)
-            sys.stdout.flush()
             sys.stdout.write(u"\r" + self._msg)
             sys.stdout.flush()
 
@@ -44,7 +41,6 @@ class StateLogger(object):
         self._c(transition_ok)
         self._c(verification_ok)
         self._msg += "[{:65s}]".format(current_state.full_name + " -> " + next_state.full_name)
-        self._clear_len = max(self._clear_len, len(self._msg))
         self._pr()
 
     def fin(self):
