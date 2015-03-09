@@ -51,6 +51,9 @@ class StateLogger(object):
         if self._debug:
             sys.stdout.write("\n")
 
-    def err(self):
+    def err(self, msg=None):
         if self._debug:
-            traceback.print_exc()
+            if msg:
+                print(str(msg))
+            else:
+                traceback.print_exc()

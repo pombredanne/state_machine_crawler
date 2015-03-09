@@ -160,7 +160,6 @@ class StateMachineCrawler(object):
         text = "Move from state %r to state %r has failed: %s." % (self._current_state, target_state, msg)
         text += "\nHistory: \n%s\n" % " -> ".join([hist.full_name for hist in self._history])
         self.log.fin()
-        self.log.err()
         raise TransitionError(text)
 
     def _do_step(self, next_state):
@@ -279,8 +278,10 @@ class StateMachineCrawler(object):
                 continue
             try:
                 self.move(state)
-            except TransitionError:
-                pass  # we just move on
+            except TransitionError, e:
+                self.log.err(e)
+            except UnreachableStateError:  # pragma: no cover
+                pass  # show must go on!
 
         if full:
 
@@ -303,10 +304,10 @@ class StateMachineCrawler(object):
                     if transition[0] != self._current_state:
                         self.move(transition[0])
                     self._do_step(transition[1])
-                except TransitionError:
-                    self.log.err()
+                except TransitionError, e:
+                    self.log.err(e)
                 except UnreachableStateError:  # pragma: no cover
-                    pass  # we just move on
+                    pass  # show must go on!
 
         self.move(self.EntryPoint)
         if self._error_states:
