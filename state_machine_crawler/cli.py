@@ -1,10 +1,9 @@
 import argparse
 import time
-import logging
 import os
 import sys
 
-from .state_machine_crawler import TransitionError, LOG
+from .state_machine_crawler import TransitionError
 from .webview import WebView
 from .svg_serializer import Serializer as SvgSerializer
 from .text_serializer import Serializer as TextSerializer
@@ -123,7 +122,7 @@ def cli(scm):
         scm._current_state = args.current_state
 
     if args.debug:
-        LOG.setLevel(logging.DEBUG)
+        scm.log.make_debug()
 
     state_monitor = WebView(scm)
 
@@ -134,6 +133,7 @@ def cli(scm):
     try:
         if args.with_webview:
             state_monitor.start()
+            time.sleep(0.5)  # to make sure that the web app is started before the state machine
         if args.all:
             scm.verify_all_states()
         elif args.full:

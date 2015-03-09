@@ -5,11 +5,9 @@ import mock
 
 from state_machine_crawler import transition, StateMachineCrawler, DeclarationError, TransitionError, \
     State as BaseState, WebView
-from state_machine_crawler.state_machine_crawler import _create_transition_map, _find_shortest_path, LOG, \
+from state_machine_crawler.state_machine_crawler import _create_transition_map, _find_shortest_path, \
     _create_transition_map_with_exclusions, _get_missing_nodes, _dfs, _equivalent
 from state_machine_crawler.dot_serializer import Serializer
-
-LOG.handlers = []
 
 EXEC_TIME = 0
 
