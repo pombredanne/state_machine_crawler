@@ -1,4 +1,5 @@
 import re
+import traceback
 
 from .errors import TransitionError, DeclarationError
 from .blocks import State
@@ -160,6 +161,7 @@ class StateMachineCrawler(object):
         text = "Move from state %r to state %r has failed: %s." % (self._current_state, target_state, msg)
         text += "\nHistory: \n%s\n" % " -> ".join([hist.full_name for hist in self._history])
         self.log.fin()
+        traceback.print_exc()
         raise TransitionError(text)
 
     def _do_step(self, next_state):
