@@ -1,6 +1,6 @@
- ☐ implement separate (!) commands to test that:
+ ✔ implement separate (!) commands to test that: @done (15-03-09 16:27)
      ✔ all states are reachable @done (15-01-26 15:54)
-     ☐ all states are reachable and all transactions are doable
+     ✔ all states are reachable and all transactions are doable @done (15-03-09 16:27)
  ✔ implement state machine's __repr__ method to return .dot representation @done (15-01-26 10:23)
      ✔ mark error transitions/states as red @done (15-01-26 10:22)
      ✔ mark current states/transitions as green @done (15-01-26 10:23)
@@ -13,8 +13,8 @@
  ✔ mark the states that were sucessfully visited as yellow @done (15-01-26 16:33)
  ✔ mark the states that were sucessfully visited once but after another attempt to visit - failed as orange @done (15-01-26 16:33)
  ✔ show price of the transition as "$PRICE" @done (15-01-26 16:46)
- ☐ find a way to revisit only the transitions that failed on the previous run - as long as the graph did not change
+ ✔ find a way to revisit only the transitions that failed on the previous run - as long as the graph did not change @done (15-03-09 16:28)
  ✔ add command line interface @done (15-02-11 16:44)
- ☐ generate junit report in such a manner that:
+ ✘ generate junit report in such a manner that: @cancelled (15-03-09 16:29)
      - each module is a test case
      - individual tests are a combination of transition and verification
