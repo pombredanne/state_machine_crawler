@@ -41,8 +41,8 @@ class WebView(object):
     >>>     pass
     >>> app.stop()
 
-    Once the code is executed, a web service monitoring your state machine shall be started under a random available
-    port in a separate thread. The url shall be printed to stdout to ease the access.
+    Once the code is executed, a web service monitoring your state machine shall be started under
+    http://localhost:8666. The url shall be printed to stdout to ease the access.
 
     An html page of the web service is a dynamic view of the state graph that represents the state machine.
     """
@@ -104,7 +104,8 @@ class WebView(object):
         return resp(environ, start_response)
 
     def _run_server(self):
-        self._server = httpd = make_server(self.HOST, 0, self, handler_class=SilentHandler)
+        self._server = httpd = make_server(self.HOST, 8666, self, handler_class=SilentHandler)
+        httpd.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         print("Started the server at http://%s:%d" % (self.HOST, httpd.server_port))
         while self._alive:
             httpd.handle_request()
