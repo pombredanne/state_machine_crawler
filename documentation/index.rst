@@ -37,6 +37,8 @@ Error class
 
 .. autoclass:: state_machine_crawler.TransitionError
 
+.. autoclass:: state_machine_crawler.UnreachableStateError
+
 State graph visualization
 -------------------------
 

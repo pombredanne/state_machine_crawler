@@ -4,7 +4,7 @@ import time
 import mock
 
 from state_machine_crawler import transition, StateMachineCrawler, DeclarationError, TransitionError, \
-    State as BaseState, WebView
+    State as BaseState, WebView, UnreachableStateError
 from state_machine_crawler.state_machine_crawler import _create_transition_map, _find_shortest_path, \
     _create_transition_map_with_exclusions, _get_missing_nodes, _dfs, _equivalent
 from state_machine_crawler.dot_serializer import Serializer
@@ -246,7 +246,7 @@ class PositiveTestStateMachineTransitionTest(BaseTestStateMachineTransitionCase)
         self.assertIs(self.smc.state, StateTwo)
 
     def test_unknown_state(self):
-        self.assertRaises(TransitionError, self.smc.move, UnknownState)
+        self.assertRaises(UnreachableStateError, self.smc.move, UnknownState)
 
     def test_reset_the_state(self):
         self.smc.move(StateOne)
@@ -291,7 +291,7 @@ class NegativeTestCases(unittest.TestCase):
         self.target.enter.side_effect = Exception
         self.assertRaisesRegexp(TransitionError, "Move from state .+ to state .+ has failed",
                                 self.smc.move, InitialState)
-        self.assertRaisesRegexp(TransitionError, "There is no way to achieve state %r" % StateOne,
+        self.assertRaisesRegexp(UnreachableStateError, "There is no way to achieve state %r" % StateOne,
                                 self.smc.move, StateOne)
 
     def test_verification_error(self):

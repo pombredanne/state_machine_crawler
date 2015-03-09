@@ -3,15 +3,11 @@ class StateMachineError(Exception):
 
 
 class TransitionError(StateMachineError):
-    """ Raised if the transition could not be performed.
+    """ Raised if the transition or verification fails """
 
-    Failure could happen because:
 
-    - target state is not reachable
-    - state verification failed
-
-    NOTE: if transition itself fails (i.e. exception in the *move* method) - the exception is raised as is
-    """
+class UnreachableStateError(StateMachineError):
+    """ Raised if state is not reachable """
 
 
 class DeclarationError(StateMachineError):

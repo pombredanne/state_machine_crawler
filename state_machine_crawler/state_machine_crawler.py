@@ -1,7 +1,6 @@
 import re
-import traceback
 
-from .errors import TransitionError, DeclarationError
+from .errors import TransitionError, DeclarationError, UnreachableStateError
 from .blocks import State
 from .logger import StateLogger
 
@@ -161,7 +160,7 @@ class StateMachineCrawler(object):
         text = "Move from state %r to state %r has failed: %s." % (self._current_state, target_state, msg)
         text += "\nHistory: \n%s\n" % " -> ".join([hist.full_name for hist in self._history])
         self.log.fin()
-        traceback.print_exc()
+        self.log.err()
         raise TransitionError(text)
 
     def _do_step(self, next_state):
@@ -250,7 +249,7 @@ class StateMachineCrawler(object):
                                                                        self._error_transitions)
         shortest_path = _find_shortest_path(reachable_state_graph, self._current_state, state, get_cost=self._get_cost)
         if shortest_path is None:
-            raise TransitionError("There is no way to achieve state %r" % state)
+            raise UnreachableStateError("There is no way to achieve state %r" % state)
         if state is self._current_state:
             next_states = [state]
         else:
@@ -304,7 +303,9 @@ class StateMachineCrawler(object):
                     if transition[0] != self._current_state:
                         self.move(transition[0])
                     self._do_step(transition[1])
-                except TransitionError:  # pragma: no cover
+                except TransitionError:
+                    self.log.err()
+                except UnreachableStateError:  # pragma: no cover
                     pass  # we just move on
 
         self.move(self.EntryPoint)
