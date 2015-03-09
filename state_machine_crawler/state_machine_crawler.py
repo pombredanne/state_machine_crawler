@@ -159,7 +159,6 @@ class StateMachineCrawler(object):
     def _err(self, target_state, msg):
         text = "Move from state %r to state %r has failed: %s." % (self._current_state, target_state, msg)
         text += "\nHistory: \n%s\n" % " -> ".join([hist.full_name for hist in self._history])
-        self.log.fin()
         raise TransitionError(text)
 
     def _do_step(self, next_state):
@@ -168,31 +167,35 @@ class StateMachineCrawler(object):
         self._next_state = next_state
         transition = self._get_transition(self._current_state, next_state)
         self.log.msg(self._current_state, self._next_state)
+        self.log.transition()
         try:
             transition(transition.im_class(self._system))
             self._visited_transitions.add((self._current_state, next_state))
             transition_ok = True
+            self.log.ok()
         except Exception:
             self._error_transitions.add((self._current_state, next_state))
             transition_ok = False
-        self.log.msg(self._current_state, self._next_state, transition_ok)
+            self.log.nok()
         if not transition_ok:
             self._error_states = _get_all_unreachable_nodes(self._state_graph, self.EntryPoint,
                                                             set.union(self._error_states, {next_state}),
                                                             self._error_transitions)
             self._current_state = self.EntryPoint
             self._err(next_state, "transition failure")
+        self.log.verification()
         try:
             verification_ok = next_state(self._system).verify()
         except Exception:
             verification_ok = False
-        self.log.msg(self._current_state, self._next_state, transition_ok, verification_ok)
         if verification_ok:
+            self.log.ok()
             self._current_state = next_state
             self._history.append(next_state)
             self._visited_states.add(next_state)
             self._next_state = None
         else:
+            self.log.nok()
             self._next_state = None
             self._error_states = _get_all_unreachable_nodes(self._state_graph, self.EntryPoint,
                                                             set.union(self._error_states, {next_state}),
@@ -205,7 +208,6 @@ class StateMachineCrawler(object):
 
             self._current_state = self.EntryPoint
             self._err(next_state, "verification failure")
-        self.log.fin()
 
     def _get_transition(self, source_state, target_state):
         if target_state is self.EntryPoint:

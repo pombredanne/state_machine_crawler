@@ -23,29 +23,36 @@ class StateLogger(object):
     def make_debug(self):
         self._debug = True
 
-    def _pr(self):
+    def _pr(self, msg):
         if self._debug:
-            sys.stdout.write(u"\r" + self._msg)
+            sys.stdout.write(msg)
             sys.stdout.flush()
 
     def _c(self, flag):
         if flag is True:
-            self._msg += "[" + Color.GREEN + Symbol.PASS + Color.NO_COLOR + "]"
+            self._pr("[" + Color.GREEN + Symbol.PASS + Color.NO_COLOR + "]")
         elif flag is False:
-            self._msg += "[" + Color.RED + Symbol.FAIL + Color.NO_COLOR + "]"
+            self._pr("[" + Color.RED + Symbol.FAIL + Color.NO_COLOR + "]")
         else:
-            self._msg += "[" + Color.BLUE + Symbol.UNKNOWN + Color.NO_COLOR + "]"
+            self._pr("[" + Color.BLUE + Symbol.UNKNOWN + Color.NO_COLOR + "]")
 
-    def msg(self, current_state, next_state, transition_ok=None, verification_ok=None):
-        self._msg = ""
-        self._c(transition_ok)
-        self._c(verification_ok)
-        self._msg += "[{:65s}]".format(current_state.full_name + " -> " + next_state.full_name)
-        self._pr()
+    def msg(self, current_state, next_state):
+        self._pr("+ " + current_state.full_name + " -> " + next_state.full_name)
+        self._pr("\n")
 
-    def fin(self):
-        if self._debug:
-            sys.stdout.write("\n")
+    def ok(self):
+        self._c(True)
+        self._pr("\n")
+
+    def nok(self):
+        self._c(False)
+        self._pr("\n")
+
+    def transition(self):
+        self._pr("\tTransition   ")
+
+    def verification(self):
+        self._pr("\tVerification ")
 
     def err(self, msg=None):
         if self._debug:
