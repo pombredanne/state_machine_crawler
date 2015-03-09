@@ -1,4 +1,5 @@
 import sys
+import traceback
 
 
 class Color:
@@ -49,3 +50,5 @@ class StateLogger(object):
     def fin(self):
         if self._debug:
             sys.stdout.write("\n")
+            if sys.exc_info()[2]:
+                traceback.print_exc()
