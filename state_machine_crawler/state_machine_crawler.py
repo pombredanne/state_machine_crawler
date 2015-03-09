@@ -280,7 +280,7 @@ class StateMachineCrawler(object):
                 continue
             try:
                 self.move(state)
-            except TransitionError, e:
+            except TransitionError, e:  # pragma: no cover
                 self.log.err(e)
             except UnreachableStateError:  # pragma: no cover
                 pass  # show must go on!
@@ -306,7 +306,7 @@ class StateMachineCrawler(object):
                     if transition[0] != self._current_state:
                         self.move(transition[0])
                     self._do_step(transition[1])
-                except TransitionError, e:
+                except TransitionError, e:  # pragma: no cover
                     self.log.err(e)
                 except UnreachableStateError:  # pragma: no cover
                     pass  # show must go on!
