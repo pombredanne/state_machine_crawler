@@ -1,3 +1,9 @@
+6.1.0 2015-03-10
+
+    [Anton Berezin <gurunars@gmail.com>]
+        * MINOR: added multiple command line arguments
+        * MINOR: logging beautification
+
 6.0.2 2015-02-23
 
     [Anton Berezin <gurunars@gmail.com>]
