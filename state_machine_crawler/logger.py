@@ -54,9 +54,11 @@ class StateLogger(object):
     def verification(self):
         self._pr("\tVerification ")
 
-    def err(self, msg=None):
+    def show_traceback(self):
         if self._debug:
-            if msg:
-                print(str(msg))
-            else:
-                traceback.print_exc()
+            self._pr("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n")
+            traceback.print_exc()
+            self._pr("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n")
+
+    def err(self, msg):
+        self._pr(str(msg))
