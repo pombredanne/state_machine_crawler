@@ -1,3 +1,9 @@
+7.0.0 2015-04-14
+
+    [Anton Berezin <gurunars@gmail.com>]
+        * MAJOR: stoped returning a boolean via a 'verify' method
+        * MINOR: beautiful traceback handling
+
 6.1.0 2015-03-10
 
     [Anton Berezin <gurunars@gmail.com>]
