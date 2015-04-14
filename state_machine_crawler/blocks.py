@@ -104,6 +104,6 @@ class State(object):
     @abstractmethod
     def verify(self):
         """
-        Checks if the system ended up in a desired state. Should return a boolean indicating if verification went well
-        or not.
+        Checks if the system ended up in a desired state. Should raise an exception (e.g. using 'assert' statement) if
+        something is not valid
         """

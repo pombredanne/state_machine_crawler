@@ -185,22 +185,16 @@ class StateMachineCrawler(object):
             self._current_state = self.EntryPoint
             self._err(next_state, "transition failure")
         self.log.verification()
-        verification_exceptional = False
         try:
-            verification_ok = next_state(self._system).verify()
-        except Exception:
-            verification_ok = False
-            verification_exceptional = True
-        if verification_ok:
+            next_state(self._system).verify()
             self.log.ok()
             self._current_state = next_state
             self._history.append(next_state)
             self._visited_states.add(next_state)
             self._next_state = None
-        else:
+        except Exception:
             self.log.nok()
-            if verification_exceptional:
-                self.log.show_traceback()
+            self.log.show_traceback()
             self._next_state = None
             self._error_states = _get_all_unreachable_nodes(self._state_graph, self.EntryPoint,
                                                             set.union(self._error_states, {next_state}),

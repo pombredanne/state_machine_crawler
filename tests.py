@@ -277,17 +277,7 @@ class NegativeTestCases(unittest.TestCase):
         self.target = mock.Mock()
         self.smc = StateMachineCrawler(self.target, InitialState)
 
-    def test_state_verification_failure(self):
-        self.smc.move(InitialState)
-        self.target.ok.return_value = False
-        self.assertRaisesRegexp(TransitionError, "Move from state .+ to state .+ has failed", self.smc.move, StateOne)
-
     def test_initial_state_verification_failure(self):
-        self.target.ok.return_value = False
-        self.assertRaisesRegexp(TransitionError, "Move from state .+ to state .+ has failed",
-                                self.smc.move, InitialState)
-
-    def test_initial_move_error(self):
         self.target.enter.side_effect = Exception
         self.assertRaisesRegexp(TransitionError, "Move from state .+ to state .+ has failed",
                                 self.smc.move, InitialState)
@@ -300,7 +290,7 @@ class NegativeTestCases(unittest.TestCase):
                                 self.smc.move, InitialState)
 
     def test_not_all_reachable(self):
-        self.target.last_verify.return_value = False
+        self.target.last_verify.side_effect = Exception
         self.assertRaisesRegexp(TransitionError, "Failed to visit the following states: %s" % StateFour,
                                 self.smc.verify_all_states)
 
