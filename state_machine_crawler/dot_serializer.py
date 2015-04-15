@@ -18,10 +18,10 @@ class Serializer(object):
             shape = "box"
             label = state.__name__
         if state is self._scm._current_state:
-            color = "forestgreen"
+            color = "blue"
             text_color = "white"
         elif state is self._scm._next_state:
-            color = "darkkhaki"
+            color = "dodgerblue"
             text_color = "black"
         elif state in self._scm._error_states:
             if state in self._scm._visited_states:
@@ -30,8 +30,8 @@ class Serializer(object):
                 color = "red"
             text_color = "black"
         elif state in self._scm._visited_states:
-            color = "yellow"
-            text_color = "black"
+            color = "forestgreen"
+            text_color = "white"
         else:
             color = "white"
             text_color = "black"
@@ -45,10 +45,9 @@ class Serializer(object):
             else:
                 color = text_color = "red"
         elif self._scm._current_state is source_state and self._scm._next_state is target_state:
-            color = text_color = "forestgreen"
+            color = text_color = "blue"
         elif (source_state, target_state) in self._scm._visited_transitions:
-            color = "yellow"
-            text_color = "black"
+            color = text_color = "forestgreen"
         else:
             color = text_color = "black"
 
