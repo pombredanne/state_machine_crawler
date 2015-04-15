@@ -19,17 +19,17 @@ DOT_GRAPH = """digraph StateMachine {splines=polyline; concentrate=true; rankdir
         label="tests";
         color=blue;
         fontcolor=blue;
-        InitialState [style=filled label="InitialState" shape=box fillcolor=yellow fontcolor=black];
-        StateOne [style=filled label="StateOne" shape=box fillcolor=yellow fontcolor=black];
-        StateTwo [style=filled label="StateTwo" shape=box fillcolor=forestgreen fontcolor=white];
+        InitialState [style=filled label="InitialState" shape=box fillcolor=forestgreen fontcolor=white];
+        StateOne [style=filled label="StateOne" shape=box fillcolor=forestgreen fontcolor=white];
+        StateTwo [style=filled label="StateTwo" shape=box fillcolor=blue fontcolor=white];
         StateFour [style=filled label="StateFour" shape=box fillcolor=white fontcolor=black];
         StateThreeVariantOne [style=filled label="StateThreeVariantOne" shape=box fillcolor=white fontcolor=black];
         StateThreeVariantTwo [style=filled label="StateThreeVariantTwo" shape=box fillcolor=white fontcolor=black];
     }
 
-    InitialState -> StateOne [color=yellow fontcolor=black label=" "];
-    EntryPoint -> InitialState [color=yellow fontcolor=black label=" "];
-    StateOne -> StateTwo [color=yellow fontcolor=black label=" "];
+    InitialState -> StateOne [color=forestgreen fontcolor=forestgreen label=" "];
+    EntryPoint -> InitialState [color=forestgreen fontcolor=forestgreen label=" "];
+    StateOne -> StateTwo [color=forestgreen fontcolor=forestgreen label=" "];
     StateOne -> StateOne [color=black fontcolor=black label=" "];
     StateTwo -> StateThreeVariantOne [color=black fontcolor=black label="$2"];
     StateTwo -> StateThreeVariantTwo [color=black fontcolor=black label=" "];
