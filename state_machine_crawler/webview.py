@@ -11,7 +11,7 @@ from werkzeug.wrappers import Response, Request
 from werkzeug.routing import Map, Rule
 from werkzeug.wsgi import wrap_file
 
-from .svg_serializer import Serializer
+from . import svg_serializer, text_serializer, dot_serializer
 
 
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -49,8 +49,14 @@ class WebView(object):
 
     HOST = 'localhost'
 
+    SERIALIZER_MAP = {
+        "svg": svg_serializer,
+        "txt": text_serializer,
+        "dot": dot_serializer
+    }
+
     def __init__(self, state_machine):
-        self._serializer = Serializer(state_machine)
+        self._state_machine = state_machine
         self._viewer_thread = threading.Thread(target=self._run_server)
         self._alive = False
         self._server = None
@@ -58,15 +64,18 @@ class WebView(object):
         url_map = [
             Rule("/", endpoint=partial(self._static, path="index.html")),
             Rule("/kill", endpoint=None),
-            Rule("/graph.svg", endpoint=self._graph),
+            Rule("/graph.<string:serializer_type>", endpoint=self._graph),
             Rule("/<string:path>", endpoint=self._static)
         ]
 
         self._url_map = Map(url_map)
 
-    def _graph(self, request):
-        resp = Response(repr(self._serializer))
-        resp.mimetype = self._serializer.mimetype
+    def _graph(self, request, serializer_type):
+
+        serializer_class = self.SERIALIZER_MAP.get(serializer_type, text_serializer).Serializer
+
+        resp = Response(repr(serializer_class(self._state_machine)))
+        resp.mimetype = serializer_class.mimetype
         return resp
 
     def _static(self, request, path):
