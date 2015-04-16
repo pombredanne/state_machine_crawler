@@ -11,7 +11,7 @@ from werkzeug.wrappers import Response, Request
 from werkzeug.routing import Map, Rule
 from werkzeug.wsgi import wrap_file
 
-from . import svg_serializer, text_serializer, dot_serializer
+from .serializers import svg, text, dot
 
 
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -50,9 +50,9 @@ class WebView(object):
     HOST = 'localhost'
 
     SERIALIZER_MAP = {
-        "svg": svg_serializer,
-        "txt": text_serializer,
-        "dot": dot_serializer
+        "svg": svg,
+        "txt": text,
+        "dot": dot
     }
 
     def __init__(self, state_machine):
@@ -72,7 +72,7 @@ class WebView(object):
 
     def _graph(self, request, serializer_type):
 
-        serializer_class = self.SERIALIZER_MAP.get(serializer_type, text_serializer).Serializer
+        serializer_class = self.SERIALIZER_MAP.get(serializer_type, text).Serializer
 
         resp = Response(repr(serializer_class(self._state_machine)))
         resp.mimetype = serializer_class.mimetype

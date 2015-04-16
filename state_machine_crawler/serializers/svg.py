@@ -1,6 +1,6 @@
 import pydot
 
-from .dot_serializer import Serializer as DotSerializer
+from .dot import Serializer as DotSerializer
 
 
 class Serializer(object):
