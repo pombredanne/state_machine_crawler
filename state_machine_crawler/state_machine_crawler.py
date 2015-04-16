@@ -126,7 +126,7 @@ class StateMachineCrawler(object):
 
     class EntryPoint(State):
 
-        def verify(self):  # pragma: no cover
+        def verify(self):
             return True
 
     def __init__(self, system, initial_state):
@@ -274,15 +274,18 @@ class StateMachineCrawler(object):
         else:
             actual_states_to_check = all_states_to_check
 
-        for state in actual_states_to_check:
-            if state in self._error_states or state in self._visited_states:  # pragma: no cover
-                continue
+        def _handled_call(function):
             try:
-                self.move(state)
-            except TransitionError, e:  # pragma: no cover
+                function()
+            except TransitionError, e:
                 self.log.err(e)
-            except UnreachableStateError:  # pragma: no cover
+            except UnreachableStateError:
                 pass  # show must go on!
+
+        for state in actual_states_to_check:
+            if state in self._error_states or state in self._visited_states:
+                continue
+            _handled_call(lambda: self.move(state))
 
         if full:
 
@@ -301,14 +304,13 @@ class StateMachineCrawler(object):
             # TODO: find the most optimal way to execute the rest of transitions
 
             for transition in unexecuted_transitions:
-                try:
+
+                def _call():
                     if transition[0] != self._current_state:
                         self.move(transition[0])
                     self._do_step(transition[1])
-                except TransitionError, e:  # pragma: no cover
-                    self.log.err(e)
-                except UnreachableStateError:  # pragma: no cover
-                    pass  # show must go on!
+
+                _handled_call(_call)
 
         self.move(self.EntryPoint)
         if self._error_states:
