@@ -149,6 +149,7 @@ class StateMachineCrawler(object):
         self._visited_states = set()
         self._visited_transitions = set()
         self._error_transitions = set()
+        self._visited_states.add(self.EntryPoint)
         self._history = []
 
     @property
@@ -279,7 +280,7 @@ class StateMachineCrawler(object):
                 function()
             except TransitionError, e:
                 self.log.err(e)
-            except UnreachableStateError:
+            except UnreachableStateError:  # pragma: no cover
                 pass  # show must go on!
 
         for state in actual_states_to_check:

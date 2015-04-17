@@ -13,7 +13,7 @@ EXEC_TIME = 0
 
 
 DOT_GRAPH = """digraph StateMachine {splines=polyline; concentrate=true; rankdir=LR;
-    EntryPoint [style=filled label="+" shape=doublecircle fillcolor=white fontcolor=black];
+    EntryPoint [style=filled label="+" shape=doublecircle fillcolor=forestgreen fontcolor=white];
 
     subgraph cluster_1 {
         label="tests";
@@ -245,9 +245,6 @@ class PositiveTestStateMachineTransitionTest(BaseTestStateMachineTransitionCase)
         self.smc.move(StateTwo)
         self.assertIs(self.smc.state, StateTwo)
 
-    def test_unknown_state(self):
-        self.assertRaises(UnreachableStateError, self.smc.move, UnknownState)
-
     def test_reset_the_state(self):
         self.smc.move(StateOne)
         self.assertEqual(self.target.reset.call_count, 0)
@@ -276,6 +273,9 @@ class NegativeTestCases(unittest.TestCase):
     def setUp(self):
         self.target = mock.Mock()
         self.smc = StateMachineCrawler(self.target, InitialState)
+
+    def test_unknown_state(self):
+        self.assertRaises(UnreachableStateError, self.smc.move, UnknownState)
 
     def test_initial_state_verification_failure(self):
         self.target.enter.side_effect = Exception
