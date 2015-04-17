@@ -5,8 +5,8 @@ import sys
 
 from .state_machine_crawler import TransitionError
 from .webview import WebView
-from .svg_serializer import Serializer as SvgSerializer
-from .text_serializer import Serializer as TextSerializer
+from .serializers.svg import Serializer as SvgSerializer
+from .serializers.text import Serializer as TextSerializer
 
 
 FLAG_FILE = ".state_machine_crawler.flag"
