@@ -41,16 +41,16 @@ Notes:
 
 ## Release steps
 
-1. Switch to **master**
-2. Merge **dev** into **master**
+1. Pull **dev** and **master** branches
+2. Switch to **dev**
 3. Make sure that all checks and tests pass
 4. Increment the version in **CHANGES** file according to the types of changes made since the latest release. Add
    timestamp to indicate when the version was released.
 5. Add bullet points based on git log entries
 6. Commit the changes
-7. Execute "git tag VERSION -m VERSION"
-8. Switch to **dev**
-9. Merge **master** into **dev**
+7. Switch to **master**
+8. Merge **dev** into **master**
+9. Execute "git tag VERSION -m VERSION"
 10. Push **dev** & **master** branches to upstream
 11. Push tags to upstream
 
