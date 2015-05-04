@@ -5,7 +5,7 @@ from functools import partial
 import threading
 import urllib2
 import socket
-from wsgiref.simple_server import make_server, WSGIRequestHandler
+from wsgiref.simple_server import make_server, WSGIRequestHandler, WSGIServer
 
 from werkzeug.wrappers import Response, Request
 from werkzeug.routing import Map, Rule
@@ -21,6 +21,10 @@ class SilentHandler(WSGIRequestHandler):
 
     def log_message(self, *args, **kwargs):
         pass
+
+
+class WSGIServerWithReusableSocket(WSGIServer):
+    allow_reuse_address = True
 
 
 class WebView(object):
@@ -114,8 +118,8 @@ class WebView(object):
         return resp(environ, start_response)
 
     def _run_server(self):
-        self._server = httpd = make_server(self.HOST, 8666, self, handler_class=SilentHandler)
-        httpd.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self._server = httpd = make_server(self.HOST, 8666, self, server_class=WSGIServerWithReusableSocket,
+                                           handler_class=SilentHandler)
         print("Started the server at http://%s:%d" % (self.HOST, httpd.server_port))
         while self._alive:
             httpd.handle_request()
