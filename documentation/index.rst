@@ -52,6 +52,12 @@ Command line interface
 
 In most common case the developer wants to be able to manipulate the
 `SUT <http://en.wikipedia.org/wiki/System_under_test>`_ without launching python emulator and just use some sort of
-command line utility. The package provides the following function:
+command line utility.
+
+The package provides an autodiscoverable CLI:
+
+.. autofunction:: state_machine_crawler.entry_point
+
+The CLI as such has the following options:
 
 .. autofunction:: state_machine_crawler.cli
