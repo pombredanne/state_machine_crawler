@@ -5,6 +5,7 @@ from functools import partial
 import threading
 import urllib2
 import socket
+import atexit
 from wsgiref.simple_server import make_server, WSGIRequestHandler, WSGIServer
 
 from werkzeug.wrappers import Response, Request
@@ -121,6 +122,13 @@ class WebView(object):
         self._server = httpd = make_server(self.HOST, 8666, self, server_class=WSGIServerWithReusableSocket,
                                            handler_class=SilentHandler)
         print("Started the server at http://%s:%d" % (self.HOST, httpd.server_port))
+
+        def close_socket():
+            httpd.socket.shutdown(socket.SHUT_RDWR)
+            httpd.socket.close()
+
+        atexit.register(close_socket)
+
         while self._alive:
             httpd.handle_request()
 
