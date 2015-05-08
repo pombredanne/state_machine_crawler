@@ -1,3 +1,8 @@
+7.3.0 2015-05-08
+
+    [Anton Berezin <gurunars@gmail.com>]
+        * Exit with status code 1 on error in CLI mode
+
 7.2.1 2015-05-07
 
     [Anton Berezin <gurunars@gmail.com>]
