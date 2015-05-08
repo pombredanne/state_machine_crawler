@@ -130,6 +130,8 @@ def cli(scm):
         time.sleep(0.5)  # to make sure that the monitor reflects the final state of the system
         state_monitor.stop()
 
+    ok = True
+
     try:
         if args.with_webview:
             state_monitor.start()
@@ -150,7 +152,8 @@ def cli(scm):
         else:
             parser.print_help()
     except TransitionError, e:
-        print e
+        ok = False
+        print(e)
     finally:
         _stop()
     _stop()
@@ -166,3 +169,6 @@ def cli(scm):
     if args.svg:
         with open(args.svg, "w") as fil:
             fil.write(repr(SvgSerializer(scm)))
+
+    if not ok:
+        return sys.exit(1)
