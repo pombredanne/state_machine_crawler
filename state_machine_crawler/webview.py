@@ -18,6 +18,13 @@ from .serializers import svg, text, dot, js
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
+def _silent(call, *args):
+    try:
+        call(*args)
+    except Exception:
+        pass
+
+
 class SilentHandler(WSGIRequestHandler):
 
     def log_message(self, *args, **kwargs):
@@ -124,8 +131,8 @@ class WebView(object):
         print("Started the server at http://%s:%d" % (self.HOST, httpd.server_port))
 
         def close_socket():
-            httpd.socket.shutdown(socket.SHUT_RDWR)
-            httpd.socket.close()
+            _silent(httpd.socket.shutdown, socket.SHUT_RDWR)
+            _silent(httpd.socket.close)
 
         atexit.register(close_socket)
 
