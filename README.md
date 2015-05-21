@@ -1,6 +1,6 @@
 # State machine crawler
 
-A library for following automata based programming model.
+A library for following automata based programming model when writing black box tests for systems that have a state.
 
 Check [documentation](http://state-machine-crawler.readthedocs.org/en/latest/) for more details.
 
@@ -10,26 +10,25 @@ Check [documentation](http://state-machine-crawler.readthedocs.org/en/latest/) f
 
 Run [pep8](https://pypi.python.org/pypi/pep8) and [pyflakes](https://pypi.python.org/pypi/pyflakes) in **src** directory
 
-## Version policy
-
-[Semantic version](http://semver.org/)
-
-## Changelog format
+## Version policy and changelog format
 
 ```
-VERSION RELEASE-TIMESTAMP=YYYY-MM-DD
+MAJOR.MINOR RELEASE-TIMESTAMP=YYYY-MM-DD
 
     [Author Name <author@email>]
-        * CHANGE_TYPE=MAJOR|MINOR|PATCH: change description
+        * CHANGE_TYPE=MAJOR|MINOR: change description
 ```
+
+**MAJOR**: backward incompatible change
+**MINOR**: backward compatible change
 
 Example
 
 ```
-12.11.3 2014-01-12
+12.11 2014-01-12
 
     [John Smith <john.smith@example.com>]
-        * PATCH: refactored the modules
+        * MINOR: refactored the modules
         * MINOR: added a new class
         * MAJOR: removed deprecated function
 ```
@@ -66,7 +65,7 @@ Always create your own feature branches from the **dev** branch. Not from **mast
 
 ## Commits
 
-1. Make sure that all commits that affected the source have got "1: ", "2: " or "3: " prefix (for MAJOR, MINOR or PATCH
-changes respectively) to simplify changelog management. Changes that did not involve source code modification should not
+1. Make sure that all commits that affected the source have got "1: " or "2:" prefix (for MAJOR and MINOR changes
+respectively) to simplify changelog management. Changes that did not involve source code modification should not
 be annotated with any prefix.
 2. Commits should be easily revertible - each commit is a logical change that DOES NOT break anything
