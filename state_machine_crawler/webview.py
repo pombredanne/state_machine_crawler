@@ -92,13 +92,8 @@ class WebView(object):
         return resp
 
     def _static(self, request, path):
-        local_path = os.path.join(PROJECT_DIR, "webview")
+        root = os.path.join(os.path.dirname(__file__), "webview")
         file_name = path.lstrip("/").replace("/", os.path.sep)
-
-        if os.path.exists(local_path):
-            root = local_path
-        else:
-            root = "/usr/share/state_machine_crawler"
 
         abs_path = os.path.join(root, file_name)
         resp = Response()

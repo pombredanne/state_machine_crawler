@@ -26,7 +26,5 @@ setup(
             'state-machine-crawler = state_machine_crawler:entry_point'
         ]
     },
-    data_files=[
-        ("/usr/share/state_machine_crawler", ["webview/index.html", "webview/jquery-2.1.3.min.js"])
-    ]
+    include_package_data=True
 )
