@@ -16,26 +16,26 @@ DOT_GRAPH = """digraph StateMachine {
     splines=polyline;
      concentrate=true;
      rankdir=LR;
-    state_machine_crawler.state_machine_crawler.EntryPoint [style=filled label="+" shape=doublecircle fillcolor=forestgreen fontcolor=white];
+    state_machine_crawler_state_machine_crawler_EntryPoint [style=filled label="+" shape=doublecircle fillcolor=forestgreen fontcolor=white];
     subgraph cluster_1 {
         label="tests";
         color=blue;
         fontcolor=blue;
-        tests.StateThreeVariantOne [style=filled label="StateThreeVariantOne" shape=box fillcolor=white fontcolor=black];
-        tests.StateFour [style=filled label="StateFour" shape=box fillcolor=white fontcolor=black];
-        tests.StateTwo [style=filled label="StateTwo" shape=box fillcolor=blue fontcolor=white];
-        tests.StateOne [style=filled label="StateOne" shape=box fillcolor=forestgreen fontcolor=white];
-        tests.StateThreeVariantTwo [style=filled label="StateThreeVariantTwo" shape=box fillcolor=white fontcolor=black];
-        tests.InitialState [style=filled label="InitialState" shape=box fillcolor=forestgreen fontcolor=white];
+        tests_StateThreeVariantOne [style=filled label="StateThreeVariantOne" shape=box fillcolor=white fontcolor=black];
+        tests_StateFour [style=filled label="StateFour" shape=box fillcolor=white fontcolor=black];
+        tests_StateTwo [style=filled label="StateTwo" shape=box fillcolor=blue fontcolor=white];
+        tests_StateOne [style=filled label="StateOne" shape=box fillcolor=forestgreen fontcolor=white];
+        tests_StateThreeVariantTwo [style=filled label="StateThreeVariantTwo" shape=box fillcolor=white fontcolor=black];
+        tests_InitialState [style=filled label="InitialState" shape=box fillcolor=forestgreen fontcolor=white];
     }
-    tests.StateThreeVariantOne -> tests.StateFour [color=black fontcolor=black label=" "];
-    tests.StateTwo -> tests.StateThreeVariantTwo [color=black fontcolor=black label=" "];
-    tests.StateTwo -> tests.StateThreeVariantOne [color=black fontcolor=black label="$2"];
-    state_machine_crawler.state_machine_crawler.EntryPoint -> tests.InitialState [color=forestgreen fontcolor=forestgreen label=" "];
-    tests.StateOne -> tests.StateTwo [color=forestgreen fontcolor=forestgreen label=" "];
-    tests.StateOne -> tests.StateOne [color=black fontcolor=black label=" "];
-    tests.StateThreeVariantTwo -> tests.StateFour [color=black fontcolor=black label=" "];
-    tests.InitialState -> tests.StateOne [color=forestgreen fontcolor=forestgreen label=" "];
+    tests_StateThreeVariantOne -> tests_StateFour [color=black fontcolor=black label=" "];
+    tests_StateTwo -> tests_StateThreeVariantTwo [color=black fontcolor=black label=" "];
+    tests_StateTwo -> tests_StateThreeVariantOne [color=black fontcolor=black label="$2"];
+    state_machine_crawler_state_machine_crawler_EntryPoint -> tests_InitialState [color=forestgreen fontcolor=forestgreen label=" "];
+    tests_StateOne -> tests_StateTwo [color=forestgreen fontcolor=forestgreen label=" "];
+    tests_StateOne -> tests_StateOne [color=black fontcolor=black label=" "];
+    tests_StateThreeVariantTwo -> tests_StateFour [color=black fontcolor=black label=" "];
+    tests_InitialState -> tests_StateOne [color=forestgreen fontcolor=forestgreen label=" "];
 }"""
 
 
@@ -374,23 +374,3 @@ class TestTransitionEquivalence(unittest.TestCase):
 
     def test_missing_transitions(self):
         self.assertFalse(_equivalent(None, None))
-
-
-def run_web_view():
-
-    class FakeStateMachine(object):
-
-        def __repr__(self):
-            return DOT_GRAPH
-
-    app = WebView(FakeStateMachine())
-    try:
-        app.start()
-        while True:
-            pass
-    except KeyboardInterrupt:
-        app.stop()
-
-
-if __name__ == "__main__":
-    run_web_view()

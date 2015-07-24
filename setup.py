@@ -17,7 +17,7 @@ setup(
     packages=find_packages(),
     setup_requires=["nose"],
     tests_require=["mock", "coverage"],
-    install_requires=["werkzeug", "pydot2"],
+    install_requires=["werkzeug", "pydot2", "pyparsing==1.5.2"],
     test_suite='nose.collector',
     author="Anton Berezin",
     author_email="gurunars@gmail.com",

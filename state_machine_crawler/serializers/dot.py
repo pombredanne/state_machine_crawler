@@ -35,7 +35,12 @@ class Serializer(object):
         else:
             color = "white"
             text_color = "black"
-        return NODE_TPL % dict(name=state.full_name, label=label, shape=shape, color=color, text_color=text_color)
+        return NODE_TPL % dict(
+            name=state.full_name.replace(".", "_"),
+            label=label,
+            shape=shape,
+            color=color,
+            text_color=text_color)
 
     def _serialize_transition(self, source_state, target_state, cost):  # pragma: no cover
         if (source_state, target_state) in self._scm._error_transitions or source_state in self._scm._error_states or \
@@ -56,8 +61,8 @@ class Serializer(object):
         else:
             label = "$%d" % cost
 
-        return EDGE_TPL % dict(source=source_state.full_name,
-                               target=target_state.full_name,
+        return EDGE_TPL % dict(source=source_state.full_name.replace(".", "_"),
+                               target=target_state.full_name.replace(".", "_"),
                                color=color,
                                label=label,
                                text_color=text_color)
