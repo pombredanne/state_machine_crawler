@@ -46,9 +46,31 @@ def _create_state_map(state, state_map=None):
     return state_map
 
 
+def _create_transition_map(state_map):
+    transition_map = {}
+    for state in state_map:
+        for name in dir(state):
+            attr = getattr(state, name)
+
+            if not hasattr(attr, "@transition@"):
+                continue
+
+            if attr.source_state:
+                transition_map[attr.source_state, state] = attr
+            else:
+
+                target = attr.target_state
+                if target == "self":
+                    target = state
+
+                transition_map[state, target] = attr
+
+    return transition_map
+
+
 def _create_state_map_with_exclusions(graph, entry_point, state_exclusion_list=None,
-                                           transition_exclusion_list=None,
-                                           filtered_graph=None):
+                                      transition_exclusion_list=None,
+                                      filtered_graph=None):
     """ Creates a sub_graph of a @graph with an assumption that a bunch of nodes from @state_exclusion_list are not
     reachable
     """
@@ -64,7 +86,7 @@ def _create_state_map_with_exclusions(graph, entry_point, state_exclusion_list=N
         if (entry_point, child_node) in transition_exclusion_list:
             continue
         if _create_state_map_with_exclusions(graph, child_node, state_exclusion_list, transition_exclusion_list,
-                                                  filtered_graph):
+                                             filtered_graph):
             filtered_children.add(child_node)
     return filtered_graph
 
@@ -108,7 +130,7 @@ def _get_all_unreachable_nodes(graph, entry_point, state_exclusion_list, transit
     be reached
     """
     sub_graph = _create_state_map_with_exclusions(graph, entry_point, state_exclusion_list,
-                                                       transition_exclusion_list)
+                                                  transition_exclusion_list)
     return _get_missing_nodes(graph, sub_graph, entry_point)
 
 
@@ -136,9 +158,17 @@ class StateMachineCrawler(object):
         self._system = system
         self._initial_state = initial_state
         self._state_graph = the_map = _create_state_map(self._initial_state)
+        self._transition_map = _create_transition_map(the_map)
 
-        for target_states in the_map.itervalues():
+        for source_state, target_states in the_map.iteritems():
+            def tempo(ep_instance):
+                pass
+            tempo.cost = 0
+            tempo.target_state = self.EntryPoint
+            tempo.source_state = source_state
+            tempo.im_class = source_state
             target_states.add(self.EntryPoint)
+            self._transition_map[source_state, self.EntryPoint] = tempo
 
         self._state_graph[self.EntryPoint] = {self._initial_state}
         self._current_state = self.EntryPoint
@@ -166,7 +196,7 @@ class StateMachineCrawler(object):
         if self._current_state is self.EntryPoint:
             self._history = []
         self._next_state = next_state
-        transition = self._get_transition(self._current_state, next_state)
+        transition = self._transition_map[self._current_state, next_state]
         self.log.msg(self._current_state, self._next_state)
         self.log.transition()
         try:
@@ -209,24 +239,12 @@ class StateMachineCrawler(object):
             self._current_state = self.EntryPoint
             self._err(next_state, "verification failure")
 
-    def _get_transition(self, source_state, target_state):
-        if target_state is self.EntryPoint:
-            def tempo(ep_instance):
-                pass
-            tempo.cost = 0
-            tempo.target_state = target_state
-            tempo.source_state = source_state
-            tempo.im_class = source_state
-            return tempo
-        else:
-            return source_state.transition_map[target_state]
-
     def _get_cost(self, states):
         """ Returns a cumulative cost of the whole chain of transitions """
         cost = 0
         cursor = states[0]
         for state in states[1:]:
-            cost += self._get_transition(cursor, state).cost
+            cost += self._transition_map[cursor, state].cost
             cursor = state
         return cost
 
@@ -245,9 +263,9 @@ class StateMachineCrawler(object):
             self._current_state = self.EntryPoint
             return
         reachable_state_graph = _create_state_map_with_exclusions(self._state_graph,
-                                                                       self.EntryPoint,
-                                                                       self._error_states,
-                                                                       self._error_transitions)
+                                                                  self.EntryPoint,
+                                                                  self._error_states,
+                                                                  self._error_transitions)
         shortest_path = _find_shortest_path(reachable_state_graph, self._current_state, state, get_cost=self._get_cost)
         if shortest_path is None:
             raise UnreachableStateError("There is no way to achieve state %r" % state)
