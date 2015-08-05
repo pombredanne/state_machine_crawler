@@ -40,32 +40,24 @@ Notes:
 
 ## Release steps
 
-1. Pull **dev** and **master** branches
-2. Switch to **dev**
-3. Make sure that all checks and tests pass
-4. Increment the version in **CHANGES** file according to the types of changes made since the latest release. Add
+1. Pull **master** branch
+2. Make sure that all checks and tests pass
+3. Increment the version in **CHANGES** file according to the types of changes made since the latest release. Add
    timestamp to indicate when the version was released.
-5. Add bullet points based on git log entries
-6. Commit the changes
-7. Switch to **master**
-8. Merge **dev** into **master**
-9. Execute "git tag VERSION -m VERSION"
-10. Push **dev** & **master** branches to upstream
-11. Push tags to upstream
+4. Add bullet points based on git log entries
+5. Commit the changes
+6. Execute "git tag VERSION -m VERSION"
+7. Push **master** branch to upstream
+8. Push version tag to upstream
 
 ## Pull requests
-
-Always create your own feature branches from the **dev** branch. Not from **master** one.
 
 1. Make sure that all commits have descriptive messages and are up to the point
 2. pep8 and pyflakes checks are supposed to pass
 3. All tests are supposed to pass
 4. If it is a new feature - make sure that new tests are created and they pass
-5. Create a pull request against the **dev** branch
+5. Create a pull request against the **master** branch
 
 ## Commits
 
-1. Make sure that all commits that affected the source have got "1: " or "2:" prefix (for MAJOR and MINOR changes
-respectively) to simplify changelog management. Changes that did not involve source code modification should not
-be annotated with any prefix.
-2. Commits should be easily revertible - each commit is a logical change that DOES NOT break anything
+Commits should be easily revertible - each commit is a logical change that DOES NOT break anything
