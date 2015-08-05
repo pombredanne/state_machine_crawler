@@ -203,8 +203,8 @@ class StateMachineCrawler(object):
 
             # mark all outgoing transitions from error states as impossible
             for state in self._error_states:
-                for transition in state.transition_map.itervalues():
-                    self._error_transitions.add((state, transition.target_state))
+                for target_state in self._state_graph[state]:
+                    self._error_transitions.add((state, target_state))
 
             self._current_state = self.EntryPoint
             self._err(next_state, "verification failure")
