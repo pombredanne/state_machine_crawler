@@ -5,8 +5,8 @@ import mock
 
 from state_machine_crawler import transition, StateMachineCrawler, DeclarationError, TransitionError, \
     State as BaseState, WebView, UnreachableStateError
-from state_machine_crawler.state_machine_crawler import _create_transition_map, _find_shortest_path, \
-    _create_transition_map_with_exclusions, _get_missing_nodes, _dfs, _equivalent
+from state_machine_crawler.state_machine_crawler import _create_state_map, _find_shortest_path, \
+    _create_state_map_with_exclusions, _get_missing_nodes, _dfs, _equivalent
 from state_machine_crawler.serializers.dot import Serializer
 
 EXEC_TIME = 0
@@ -116,10 +116,10 @@ class StateFour(State):
 
 class BaseFunctionsTest(unittest.TestCase):
 
-    def test_create_transition_map(self):
+    def test_create_state_map(self):
 
         rval = {}
-        for key, value in _create_transition_map(InitialState).iteritems():
+        for key, value in _create_state_map(InitialState).iteritems():
             if key.__name__ == "EntryPoint":
                 continue
             rval[key] = value
@@ -133,7 +133,7 @@ class BaseFunctionsTest(unittest.TestCase):
             StateFour: set()
         }, rval)
 
-    def test_create_transition_map_with_state_exclusions(self):
+    def test_create_state_map_with_state_exclusions(self):
         graph = {
             0: {1, 2, 3},
             1: {4, 5},
@@ -150,10 +150,10 @@ class BaseFunctionsTest(unittest.TestCase):
             6: {7, 8}
         }
 
-        self.assertEqual(_create_transition_map_with_exclusions(graph, 0, exclusion_list), filtered_graph)
+        self.assertEqual(_create_state_map_with_exclusions(graph, 0, exclusion_list), filtered_graph)
         self.assertEqual(_get_missing_nodes(graph, filtered_graph, 0), {1, 2, 4, 5, 9})
 
-    def test_create_transition_map_with_transition_exclusions(self):
+    def test_create_state_map_with_transition_exclusions(self):
         graph = {
             0: {1, 2, 3},
             1: {4, 5},
@@ -170,12 +170,12 @@ class BaseFunctionsTest(unittest.TestCase):
             6: {7, 8}
         }
 
-        self.assertEqual(_create_transition_map_with_exclusions(graph, 0, transition_exclusion_list=exclusion_list),
+        self.assertEqual(_create_state_map_with_exclusions(graph, 0, transition_exclusion_list=exclusion_list),
                          filtered_graph)
         self.assertEqual(_get_missing_nodes(graph, filtered_graph, 0), {1, 3, 4, 5, 9})
 
     def test_find_shortest_path(self):
-        graph = _create_transition_map(InitialState)
+        graph = _create_state_map(InitialState)
 
         def get_cost(states):
             cost = 0
@@ -189,7 +189,7 @@ class BaseFunctionsTest(unittest.TestCase):
         self.assertEqual(shortest_path, [InitialState, StateOne, StateTwo, StateThreeVariantTwo, StateFour])
 
     def test_unknown_state(self):
-        graph = _create_transition_map(InitialState)
+        graph = _create_state_map(InitialState)
         shortest_path = _find_shortest_path(graph, UnknownState, StateFour)
         self.assertIs(shortest_path, None)
 

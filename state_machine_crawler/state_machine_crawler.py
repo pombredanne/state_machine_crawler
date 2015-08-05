@@ -34,7 +34,7 @@ def _find_shortest_path(graph, start, end, path=[], get_cost=len):
     return shortest
 
 
-def _create_transition_map(state, state_map=None):
+def _create_state_map(state, state_map=None):
     """ Returns a graph for state transitioning """
     state_map = state_map or {}
     if state in state_map:
@@ -42,11 +42,11 @@ def _create_transition_map(state, state_map=None):
     state_map[state] = child_states = set()
     for next_state in state.transition_map.keys():
         child_states.add(next_state)
-        _create_transition_map(next_state, state_map)
+        _create_state_map(next_state, state_map)
     return state_map
 
 
-def _create_transition_map_with_exclusions(graph, entry_point, state_exclusion_list=None,
+def _create_state_map_with_exclusions(graph, entry_point, state_exclusion_list=None,
                                            transition_exclusion_list=None,
                                            filtered_graph=None):
     """ Creates a sub_graph of a @graph with an assumption that a bunch of nodes from @state_exclusion_list are not
@@ -63,7 +63,7 @@ def _create_transition_map_with_exclusions(graph, entry_point, state_exclusion_l
     for child_node in graph[entry_point]:
         if (entry_point, child_node) in transition_exclusion_list:
             continue
-        if _create_transition_map_with_exclusions(graph, child_node, state_exclusion_list, transition_exclusion_list,
+        if _create_state_map_with_exclusions(graph, child_node, state_exclusion_list, transition_exclusion_list,
                                                   filtered_graph):
             filtered_children.add(child_node)
     return filtered_graph
@@ -107,7 +107,7 @@ def _get_all_unreachable_nodes(graph, entry_point, state_exclusion_list, transit
     """ Given a @graph and a bunch of unreachable states in @state_exclusion_list calculates which other nodes cannot
     be reached
     """
-    sub_graph = _create_transition_map_with_exclusions(graph, entry_point, state_exclusion_list,
+    sub_graph = _create_state_map_with_exclusions(graph, entry_point, state_exclusion_list,
                                                        transition_exclusion_list)
     return _get_missing_nodes(graph, sub_graph, entry_point)
 
@@ -135,7 +135,7 @@ class StateMachineCrawler(object):
         self.clear()
         self._system = system
         self._initial_state = initial_state
-        self._state_graph = the_map = _create_transition_map(self._initial_state)
+        self._state_graph = the_map = _create_state_map(self._initial_state)
 
         for target_states in the_map.itervalues():
             target_states.add(self.EntryPoint)
@@ -244,7 +244,7 @@ class StateMachineCrawler(object):
             self._next_state = None
             self._current_state = self.EntryPoint
             return
-        reachable_state_graph = _create_transition_map_with_exclusions(self._state_graph,
+        reachable_state_graph = _create_state_map_with_exclusions(self._state_graph,
                                                                        self.EntryPoint,
                                                                        self._error_states,
                                                                        self._error_transitions)
