@@ -95,8 +95,9 @@ class Serializer(object):
             rval.append("".join(cluster_data))
             i += 1
 
-        for state in all_states:
-            for target_state, transition in state.transition_map.iteritems():
+        for key, transition in self._scm._transition_map.iteritems():
+            state, target_state = key
+            if target_state is not self._scm.EntryPoint:
                 rval.append(self._serialize_transition(state, target_state, transition.cost))
 
         rval.append("}")

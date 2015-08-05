@@ -6,7 +6,7 @@ import mock
 from state_machine_crawler import transition, StateMachineCrawler, DeclarationError, TransitionError, \
     State as BaseState, WebView, UnreachableStateError
 from state_machine_crawler.state_machine_crawler import _create_state_map, _find_shortest_path, \
-    _create_state_map_with_exclusions, _get_missing_nodes, _dfs, _equivalent
+    _create_state_map_with_exclusions, _get_missing_nodes, _dfs, _equivalent, _create_transition_map
 from state_machine_crawler.serializers.dot import Serializer
 
 EXEC_TIME = 0
@@ -44,7 +44,7 @@ class State(BaseState):
     def verify(self):
         time.sleep(EXEC_TIME)
         self._system.visited(self.__class__.__name__)
-        return self._system.ok()
+        self._system.ok()
 
 
 class InitialState(State):
@@ -109,9 +109,19 @@ class StateFour(State):
         self._system.non_unique()
 
     def verify(self):
-        if not super(StateFour, self).verify():
-            return False
-        return bool(self._system.last_verify())
+        print 111111111111111
+        super(StateFour, self).verify()
+        self._system.last_verify()
+
+
+ALL_STATES = [
+    InitialState,
+    StateOne,
+    StateTwo,
+    StateThreeVariantOne,
+    StateThreeVariantTwo,
+    StateFour
+]
 
 
 class BaseFunctionsTest(unittest.TestCase):
@@ -119,7 +129,7 @@ class BaseFunctionsTest(unittest.TestCase):
     def test_create_state_map(self):
 
         rval = {}
-        for key, value in _create_state_map(InitialState).iteritems():
+        for key, value in _create_state_map(ALL_STATES).iteritems():
             if key.__name__ == "EntryPoint":
                 continue
             rval[key] = value
@@ -175,13 +185,14 @@ class BaseFunctionsTest(unittest.TestCase):
         self.assertEqual(_get_missing_nodes(graph, filtered_graph, 0), {1, 3, 4, 5, 9})
 
     def test_find_shortest_path(self):
-        graph = _create_state_map(InitialState)
+        graph = _create_state_map(ALL_STATES)
+        transitions = _create_transition_map(graph)
 
         def get_cost(states):
             cost = 0
             cursor = states[0]
             for state in states[1:]:
-                cost += cursor.transition_map[state].cost
+                cost += transitions[cursor, state].cost
                 cursor = state
             return cost
 
@@ -189,7 +200,7 @@ class BaseFunctionsTest(unittest.TestCase):
         self.assertEqual(shortest_path, [InitialState, StateOne, StateTwo, StateThreeVariantTwo, StateFour])
 
     def test_unknown_state(self):
-        graph = _create_state_map(InitialState)
+        graph = _create_state_map(ALL_STATES)
         shortest_path = _find_shortest_path(graph, UnknownState, StateFour)
         self.assertIs(shortest_path, None)
 
@@ -210,6 +221,8 @@ class BaseTestStateMachineTransitionCase(unittest.TestCase):
     def setUpClass(cls):
         cls.target = mock.Mock()
         cls.smc = StateMachineCrawler(cls.target, InitialState)
+        for state in ALL_STATES:
+            cls.smc.register_state(state)
         if EXEC_TIME:
             cls.viewer = WebView(cls.smc)
             cls.viewer.start()
@@ -273,6 +286,8 @@ class NegativeTestCases(unittest.TestCase):
     def setUp(self):
         self.target = mock.Mock()
         self.smc = StateMachineCrawler(self.target, InitialState)
+        for state in ALL_STATES:
+            self.smc.register_state(state)
 
     def test_unknown_state(self):
         self.assertRaises(UnreachableStateError, self.smc.move, UnknownState)

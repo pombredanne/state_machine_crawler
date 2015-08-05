@@ -1,4 +1,5 @@
 import re
+from collections import defaultdict
 
 from .errors import TransitionError, DeclarationError, UnreachableStateError
 from .blocks import State
@@ -34,21 +35,21 @@ def _find_shortest_path(graph, start, end, path=[], get_cost=len):
     return shortest
 
 
-def _create_state_map(state, state_map=None):
+def _create_state_map(all_states):
     """ Returns a graph for state transitioning """
-    state_map = state_map or {}
-    if state in state_map:
-        return state_map
-    state_map[state] = child_states = set()
-    for next_state in state.transition_map.keys():
-        child_states.add(next_state)
-        _create_state_map(next_state, state_map)
+    state_map = defaultdict(set)
+    for state in all_states:
+        state_map[state] = state_map[state] or set()
+        for next_state in state.outgoing:
+            state_map[state].add(next_state)
+        for prev_state in state.incoming:
+            state_map[prev_state].add(state)
     return state_map
 
 
-def _create_transition_map(state_map):
+def _create_transition_map(all_states):
     transition_map = {}
-    for state in state_map:
+    for state in all_states:
         for name in dir(state):
             attr = getattr(state, name)
 
@@ -157,10 +158,16 @@ class StateMachineCrawler(object):
         self.clear()
         self._system = system
         self._initial_state = initial_state
-        self._state_graph = the_map = _create_state_map(self._initial_state)
-        self._transition_map = _create_transition_map(the_map)
+        self._registered_states = set()
+        self._current_state = self.EntryPoint
+        self._reload_graphs()
+        self.log = StateLogger()
 
-        for source_state, target_states in the_map.iteritems():
+    def _reload_graphs(self):
+        self._state_graph = _create_state_map(self._registered_states)
+        self._transition_map = _create_transition_map(self._registered_states)
+
+        for source_state, target_states in self._state_graph.iteritems():
             def tempo(ep_instance):
                 pass
             tempo.cost = 0
@@ -171,8 +178,6 @@ class StateMachineCrawler(object):
             self._transition_map[source_state, self.EntryPoint] = tempo
 
         self._state_graph[self.EntryPoint] = {self._initial_state}
-        self._current_state = self.EntryPoint
-        self.log = StateLogger()
 
     def clear(self):
         self._error_states = set()
@@ -283,15 +288,16 @@ class StateMachineCrawler(object):
         @pattern (str=None): visits only the states full names of which match the pattern
         @full (bool=False): if True, not only all states are visited but also all transitions are exercised
         """
+
         all_states_to_check = _dfs(self._state_graph, self._initial_state)
 
         actual_states_to_check = []
-        if pattern is not None:
+        if pattern is None:
+            actual_states_to_check = all_states_to_check
+        else:
             for state in all_states_to_check:
                 if re.match(pattern, state.full_name):
                     actual_states_to_check.append(state)
-        else:
-            actual_states_to_check = all_states_to_check
 
         def _handled_call(function):
             try:
@@ -335,3 +341,20 @@ class StateMachineCrawler(object):
         if self._error_states:
             failed_states = map(str, self._error_states)
             raise TransitionError("Failed to visit the following states: %s" % ", ".join(sorted(failed_states)))
+
+    def register_state(self, state, refresh=True):
+        if not issubclass(state, State):
+            raise DeclarationError("state must be a subclass of State")
+        self._registered_states.add(state)
+        for state in state.incoming + state.outgoing:
+            if state not in self._registered_states:
+                self.register_state(state)
+        if refresh:
+            self._reload_graphs()
+
+    def register_module(self, module):
+        for name in dir(module):
+            item = getattr(module, name)
+            if issubclass(item, State):
+                self.register_state(item, False)
+        self._reload_graphs()

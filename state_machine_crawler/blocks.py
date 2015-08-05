@@ -61,7 +61,8 @@ class StateMetaClass(ABCMeta):
 
     def __init__(self, name, bases, attrs):
         super(StateMetaClass, self).__init__(name, bases, attrs)
-        self.transition_map = {}
+        self.incoming = []
+        self.outgoing = []
         self.full_name = self.__module__ + "." + self.__name__
         for name in dir(self):
             attr = getattr(self, name)
@@ -84,9 +85,9 @@ class StateMetaClass(ABCMeta):
             if source and target:
                 raise DeclarationError("Only target or source state can be defined for %r " % attr)
             elif target:
-                self.transition_map[target] = attr
+                self.outgoing.append(target)
             elif source:
-                attr.source_state.transition_map[self] = attr
+                self.incoming.append(source)
             else:
                 raise DeclarationError("No target nor source state is defined for %r" % attr)
 
