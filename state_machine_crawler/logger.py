@@ -1,5 +1,6 @@
 import sys
 import traceback
+import platform
 
 
 class Color:
@@ -19,6 +20,7 @@ class StateLogger(object):
 
     def __init__(self, debug=False):
         self._debug = debug
+        self._platform = platform.system()
 
     def make_debug(self):
         self._debug = True
@@ -28,13 +30,31 @@ class StateLogger(object):
             sys.stdout.write(msg)
             sys.stdout.flush()
 
-    def _c(self, flag):
-        if flag is True:
+    def _pass(self):
+        if self._platform == "Windows":
+            self._pr("[+]")
+        else:
             self._pr("[" + Color.GREEN + Symbol.PASS + Color.NO_COLOR + "]")
-        elif flag is False:
+
+    def _fail(self):
+        if self._platform == "Windows":
+            self._pr("[-]")
+        else:
             self._pr("[" + Color.RED + Symbol.FAIL + Color.NO_COLOR + "]")
+
+    def _unknown(self):
+        if self._platform == "Windows":
+            self._pr("[?]")
         else:
             self._pr("[" + Color.BLUE + Symbol.UNKNOWN + Color.NO_COLOR + "]")
+
+    def _c(self, flag):
+        if flag is True:
+            self._pass()
+        elif flag is False:
+            self._fail()
+        else:
+            self._unknown()
 
     def msg(self, current_state, next_state):
         self._pr("+ " + current_state.full_name + " -> " + next_state.full_name)
