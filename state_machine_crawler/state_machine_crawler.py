@@ -343,21 +343,39 @@ class StateMachineCrawler(object):
             failed_states = map(str, self._error_states)
             raise TransitionError("Failed to visit the following states: %s" % ", ".join(sorted(failed_states)))
 
-    def register_state(self, state, refresh=True):
+    def _register_state(self, state, refresh=True):
         if not issubclass(state, State):
             raise DeclarationError("state must be a subclass of State")
         self._registered_states.add(state)
         for state in state.incoming + state.outgoing:
             if state not in self._registered_states:
-                self.register_state(state)
+                self._register_state(state)
         if refresh:
             self._reload_graphs()
 
+    def register_state(self, state):
+        """
+        Registeres a concrete state and all states related to it inside the state machine
+
+        @state (State subclass)
+
+        >>> scm.register_state(SomeState)
+        """
+        self._register_state(state)
+
     def register_module(self, module):
+        """
+        Registeres all states from a given Python module
+
+        @module (python module)
+
+        >>> from foobar import module_with_states
+        >>> scm.register_module(module_with_states)
+        """
         for name in dir(module):
             if name.startswith("_"):
                 continue
             item = getattr(module, name)
             if inspect.isclass(item) and issubclass(item, State):
-                self.register_state(item, False)
+                self._register_state(item, False)
         self._reload_graphs()
