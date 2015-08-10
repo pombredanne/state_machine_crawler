@@ -66,6 +66,8 @@ def cli(scm):
         ...
 
         scm = StateMachineCrawler(InitialState)
+        scm.register_module(some_module)
+        scm.register_state(SomeState)
 
         if __name__ == "__main__":
             cli(scm)

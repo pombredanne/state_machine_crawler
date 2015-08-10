@@ -163,6 +163,7 @@ class StateMachineCrawler(object):
         self._current_state = self.EntryPoint
         self._reload_graphs()
         self.log = StateLogger()
+        self._register_state(initial_state)
 
     def _reload_graphs(self):
         self._state_graph = _create_state_map(self._registered_states)
