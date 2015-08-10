@@ -54,7 +54,7 @@ def entry_point():
 
         {
             "path": "functional_tests",
-            "instance" "functional_tests.instance.state_machine"
+            "instance": "functional_tests.instance.state_machine"
         }
 
     Sample command line usage:
