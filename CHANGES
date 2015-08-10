@@ -1,3 +1,10 @@
+8.0 2015-08-10
+
+    [Anton Berezin <gurunars@gmail.com>]
+        * MAJOR: got rid of class wide context aware state registries - now all states/modules must be registered
+                 explicitly
+        * MINOR: disabled unicode symbols for Windows
+
 7.5 2015-07-25
 
     [Anton Berezin <gurunars@gmail.com>]
