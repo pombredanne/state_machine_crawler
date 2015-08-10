@@ -1,4 +1,5 @@
 import re
+import inspect
 from collections import defaultdict
 
 from .errors import TransitionError, DeclarationError, UnreachableStateError
@@ -354,7 +355,9 @@ class StateMachineCrawler(object):
 
     def register_module(self, module):
         for name in dir(module):
+            if name.startswith("_"):
+                continue
             item = getattr(module, name)
-            if issubclass(item, State):
+            if inspect.isclass(item) and issubclass(item, State):
                 self.register_state(item, False)
         self._reload_graphs()

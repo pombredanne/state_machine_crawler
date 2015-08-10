@@ -1,5 +1,6 @@
 import unittest
 import time
+import sys
 
 import mock
 
@@ -109,7 +110,6 @@ class StateFour(State):
         self._system.non_unique()
 
     def verify(self):
-        print 111111111111111
         super(StateFour, self).verify()
         self._system.last_verify()
 
@@ -314,6 +314,20 @@ class NegativeTestCases(unittest.TestCase):
 
 
 class TestStateMachineDeclaration(unittest.TestCase):
+
+    def test_register_module(self):
+        smc = StateMachineCrawler(mock.Mock(), InitialState)
+        smc.register_module(sys.modules[self.__module__])
+        self.assertEqual(len(smc._registered_states), 10)
+
+    def test_register_not_a_state(self):
+
+        class NotAState:
+            pass
+
+        smc = StateMachineCrawler(mock.Mock(), InitialState)
+        self.assertRaisesRegexp(DeclarationError, "state must be a subclass of State",
+                                smc.register_state, NotAState)
 
     def test_wrong_initial_state(self):
 
