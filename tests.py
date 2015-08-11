@@ -419,9 +419,6 @@ class TestHierarchy(unittest.TestCase):
         for state in ALL_STATES:
             smc.register_state(state)
         self.assertEqual(create_hierarchy(smc), {
-            'state_machine_crawler': {
-                'state_machine_crawler': {
-                    'EntryPoint': smc.EntryPoint}},
             'tests': {
                 'InitialState': InitialState,
                 'StateFour': StateFour,

@@ -3,6 +3,8 @@ def create_hierarchy(scm):
     root = {}
 
     for name, state in scm._state_name_map.iteritems():
+        if state is scm.EntryPoint:
+            continue
         parent_result = local_result = root
         nodes = name.split(".")
         for node in nodes:
