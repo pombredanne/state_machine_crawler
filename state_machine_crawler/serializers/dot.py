@@ -1,4 +1,6 @@
-from collections import defaultdict
+from .hierarchy import create_hierarchy
+from ..blocks import State
+
 
 NODE_TPL = "%(name)s [style=filled label=\"%(label)s\" shape=%(shape)s fillcolor=%(color)s fontcolor=%(text_color)s];"
 EDGE_TPL = "%(source)s -> %(target)s [color=%(color)s fontcolor=%(text_color)s label=\"%(label)s\"];"
@@ -9,6 +11,7 @@ class Serializer(object):
 
     def __init__(self, scm):
         self._scm = scm
+        self._cluster_index = 0
 
     def _serialize_state(self, state):  # pragma: no cover
         if state is self._scm.EntryPoint:
@@ -67,6 +70,25 @@ class Serializer(object):
                                label=label,
                                text_color=text_color)
 
+    def _serialize_collection(self, module_map, cluster_name=None):
+        self._cluster_index += 1
+        if cluster_name:
+            rval = ["subgraph cluster_%d {label=\"%s\";color=blue;fontcolor=blue;" % (self._cluster_index,
+                                                                                      cluster_name)]
+        else:
+            rval = []
+
+        for node_name, node_value in module_map.iteritems():
+            if isinstance(node_value, dict):
+                rval.extend(self._serialize_collection(node_value, node_name))
+            elif issubclass(node_value, State):
+                rval.append(self._serialize_state(node_value))
+
+        if cluster_name:
+            rval.append("}")
+
+        return rval
+
     def __repr__(self):
         # TODO: implement .dot graph generation here without pydot dependency
         all_states = set()
@@ -75,25 +97,11 @@ class Serializer(object):
             for st in target_states:
                 all_states.add(st)
 
-        module_map = defaultdict(list)
-        for state in all_states:
-            if state is self._scm.EntryPoint:
-                continue
-            module_map[state.__module__].append(state)
-
         rval = ["digraph StateMachine {splines=polyline; concentrate=true; rankdir=LR;"]
 
         rval.append(self._serialize_state(self._scm.EntryPoint))
 
-        i = 1
-        for module_name, states in module_map.iteritems():
-            cluster_name = module_name.split(".")[-1]
-            cluster_data = ["subgraph cluster_%d {label=\"%s\";color=blue;fontcolor=blue;" % (i, cluster_name)]
-            for state in states:
-                cluster_data.append(self._serialize_state(state))
-            cluster_data.append("}")
-            rval.append("".join(cluster_data))
-            i += 1
+        rval.extend(self._serialize_collection(create_hierarchy(self._scm)))
 
         for key, transition in self._scm._transition_map.iteritems():
             state, target_state = key

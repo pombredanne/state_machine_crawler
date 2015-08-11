@@ -14,30 +14,31 @@ from state_machine_crawler.serializers.hierarchy import create_hierarchy
 EXEC_TIME = 0
 
 
+#dot -Tpng test.dot -o test.png
 DOT_GRAPH = """digraph StateMachine {
     splines=polyline;
      concentrate=true;
      rankdir=LR;
     state_machine_crawler_state_machine_crawler_EntryPoint [style=filled label="+" shape=doublecircle fillcolor=forestgreen fontcolor=white];
-    subgraph cluster_1 {
-        label="tests";
-        color=blue;
-        fontcolor=blue;
-        tests_StateThreeVariantOne [style=filled label="StateThreeVariantOne" shape=box fillcolor=white fontcolor=black];
-        tests_StateFour [style=filled label="StateFour" shape=box fillcolor=white fontcolor=black];
-        tests_StateTwo [style=filled label="StateTwo" shape=box fillcolor=blue fontcolor=white];
-        tests_StateOne [style=filled label="StateOne" shape=box fillcolor=forestgreen fontcolor=white];
-        tests_StateThreeVariantTwo [style=filled label="StateThreeVariantTwo" shape=box fillcolor=white fontcolor=black];
-        tests_InitialState [style=filled label="InitialState" shape=box fillcolor=forestgreen fontcolor=white];
+    subgraph cluster_2 {
+    label="tests";
+    color=blue;
+    fontcolor=blue;
+    tests_StateTwo [style=filled label="StateTwo" shape=box fillcolor=blue fontcolor=white];
+    tests_StateThreeVariantOne [style=filled label="StateThreeVariantOne" shape=box fillcolor=white fontcolor=black];
+    tests_StateFour [style=filled label="StateFour" shape=box fillcolor=white fontcolor=black];
+    tests_InitialState [style=filled label="InitialState" shape=box fillcolor=forestgreen fontcolor=white];
+    tests_StateOne [style=filled label="StateOne" shape=box fillcolor=forestgreen fontcolor=white];
+    tests_StateThreeVariantTwo [style=filled label="StateThreeVariantTwo" shape=box fillcolor=white fontcolor=black];
     }
-    tests_StateThreeVariantOne -> tests_StateFour [color=black fontcolor=black label=" "];
-    tests_StateTwo -> tests_StateThreeVariantTwo [color=black fontcolor=black label=" "];
-    tests_StateTwo -> tests_StateThreeVariantOne [color=black fontcolor=black label="$2"];
-    state_machine_crawler_state_machine_crawler_EntryPoint -> tests_InitialState [color=forestgreen fontcolor=forestgreen label=" "];
-    tests_StateOne -> tests_StateTwo [color=forestgreen fontcolor=forestgreen label=" "];
-    tests_StateOne -> tests_StateOne [color=black fontcolor=black label=" "];
-    tests_StateThreeVariantTwo -> tests_StateFour [color=black fontcolor=black label=" "];
     tests_InitialState -> tests_StateOne [color=forestgreen fontcolor=forestgreen label=" "];
+    tests_StateOne -> tests_StateOne [color=black fontcolor=black label=" "];
+    tests_StateThreeVariantOne -> tests_StateFour [color=black fontcolor=black label=" "];
+    tests_StateThreeVariantTwo -> tests_StateFour [color=black fontcolor=black label=" "];
+    tests_StateOne -> tests_StateTwo [color=forestgreen fontcolor=forestgreen label=" "];
+    state_machine_crawler_state_machine_crawler_EntryPoint -> tests_InitialState [color=forestgreen fontcolor=forestgreen label=" "];
+    tests_StateTwo -> tests_StateThreeVariantOne [color=black fontcolor=black label="$2"];
+    tests_StateTwo -> tests_StateThreeVariantTwo [color=black fontcolor=black label=" "];
 }"""
 
 
