@@ -9,6 +9,7 @@ from state_machine_crawler import transition, StateMachineCrawler, DeclarationEr
 from state_machine_crawler.state_machine_crawler import _create_state_map, _find_shortest_path, \
     _create_state_map_with_exclusions, _get_missing_nodes, _dfs, _equivalent, _create_transition_map
 from state_machine_crawler.serializers.dot import Serializer
+from state_machine_crawler.serializers.hierarchy import create_hierarchy
 
 EXEC_TIME = 0
 
@@ -409,3 +410,22 @@ class TestTransitionEquivalence(unittest.TestCase):
 
     def test_missing_transitions(self):
         self.assertFalse(_equivalent(None, None))
+
+
+class TestHierarchy(unittest.TestCase):
+
+    def test_main(self):
+        smc = StateMachineCrawler(None, InitialState)
+        for state in ALL_STATES:
+            smc.register_state(state)
+        self.assertEqual(create_hierarchy(smc), {
+            'state_machine_crawler': {
+                'state_machine_crawler': {
+                    'EntryPoint': smc.EntryPoint}},
+            'tests': {
+                'InitialState': InitialState,
+                'StateFour': StateFour,
+                'StateOne': StateOne,
+                'StateThreeVariantOne': StateThreeVariantOne,
+                'StateThreeVariantTwo': StateThreeVariantTwo,
+                'StateTwo': StateTwo}})
