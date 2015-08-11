@@ -1,6 +1,4 @@
 import unittest
-import time
-import sys
 
 import mock
 
@@ -11,10 +9,13 @@ from state_machine_crawler.state_machine_crawler import _create_state_map, _find
 from state_machine_crawler.serializers.dot import Serializer
 from state_machine_crawler.serializers.hierarchy import create_hierarchy
 
-EXEC_TIME = 0
+from .cases import ALL_STATES, InitialState, StateOne, StateTwo, StateThreeVariantOne, StateThreeVariantTwo, \
+    StateFour, EXEC_TIME, UnknownState, State
+from .tpl_cases import TplStateOne, TplStateTwo
+from . import non_tpl_cases
 
 
-#dot -Tpng test.dot -o test.png
+# dot -Tpng test.dot -o test.png
 DOT_GRAPH = """digraph StateMachine {
     splines=polyline;
      concentrate=true;
@@ -24,106 +25,27 @@ DOT_GRAPH = """digraph StateMachine {
     label="tests";
     color=blue;
     fontcolor=blue;
-    tests_StateTwo [style=filled label="StateTwo" shape=box fillcolor=blue fontcolor=white];
-    tests_StateThreeVariantOne [style=filled label="StateThreeVariantOne" shape=box fillcolor=white fontcolor=black];
-    tests_StateFour [style=filled label="StateFour" shape=box fillcolor=white fontcolor=black];
-    tests_InitialState [style=filled label="InitialState" shape=box fillcolor=forestgreen fontcolor=white];
-    tests_StateOne [style=filled label="StateOne" shape=box fillcolor=forestgreen fontcolor=white];
-    tests_StateThreeVariantTwo [style=filled label="StateThreeVariantTwo" shape=box fillcolor=white fontcolor=black];
+    subgraph cluster_3 {
+    label="cases";
+    color=blue;
+    fontcolor=blue;
+    tests_cases_StateTwo [style=filled label="StateTwo" shape=box fillcolor=blue fontcolor=white];
+    tests_cases_StateThreeVariantOne [style=filled label="StateThreeVariantOne" shape=box fillcolor=white fontcolor=black];
+    tests_cases_StateFour [style=filled label="StateFour" shape=box fillcolor=white fontcolor=black];
+    tests_cases_InitialState [style=filled label="InitialState" shape=box fillcolor=forestgreen fontcolor=white];
+    tests_cases_StateOne [style=filled label="StateOne" shape=box fillcolor=forestgreen fontcolor=white];
+    tests_cases_StateThreeVariantTwo [style=filled label="StateThreeVariantTwo" shape=box fillcolor=white fontcolor=black];
     }
-    tests_InitialState -> tests_StateOne [color=forestgreen fontcolor=forestgreen label=" "];
-    tests_StateOne -> tests_StateOne [color=black fontcolor=black label=" "];
-    tests_StateThreeVariantOne -> tests_StateFour [color=black fontcolor=black label=" "];
-    tests_StateThreeVariantTwo -> tests_StateFour [color=black fontcolor=black label=" "];
-    tests_StateOne -> tests_StateTwo [color=forestgreen fontcolor=forestgreen label=" "];
-    state_machine_crawler_state_machine_crawler_EntryPoint -> tests_InitialState [color=forestgreen fontcolor=forestgreen label=" "];
-    tests_StateTwo -> tests_StateThreeVariantOne [color=black fontcolor=black label="$2"];
-    tests_StateTwo -> tests_StateThreeVariantTwo [color=black fontcolor=black label=" "];
+    }
+    tests_cases_StateThreeVariantTwo -> tests_cases_StateFour [color=black fontcolor=black label=" "];
+    tests_cases_StateOne -> tests_cases_StateOne [color=black fontcolor=black label=" "];
+    tests_cases_StateOne -> tests_cases_StateTwo [color=forestgreen fontcolor=forestgreen label=" "];
+    tests_cases_InitialState -> tests_cases_StateOne [color=forestgreen fontcolor=forestgreen label=" "];
+    state_machine_crawler_state_machine_crawler_EntryPoint -> tests_cases_InitialState [color=forestgreen fontcolor=forestgreen label=" "];
+    tests_cases_StateThreeVariantOne -> tests_cases_StateFour [color=black fontcolor=black label=" "];
+    tests_cases_StateTwo -> tests_cases_StateThreeVariantOne [color=black fontcolor=black label="$2"];
+    tests_cases_StateTwo -> tests_cases_StateThreeVariantTwo [color=black fontcolor=black label=" "];
 }"""
-
-
-class State(BaseState):
-
-    def verify(self):
-        time.sleep(EXEC_TIME)
-        self._system.visited(self.__class__.__name__)
-        self._system.ok()
-
-
-class InitialState(State):
-
-    @transition(source_state=StateMachineCrawler.EntryPoint)
-    def init(self):
-        time.sleep(EXEC_TIME)
-        self._system.enter()
-
-
-class UnknownState(State):
-    pass
-
-
-class StateOne(State):
-
-    @transition(source_state=InitialState)
-    def from_initial_state(self):
-        time.sleep(EXEC_TIME)
-        self._system.unique()
-
-    @transition(target_state="self")
-    def reset(self):
-        time.sleep(EXEC_TIME)
-        self._system.reset()
-
-
-class StateTwo(State):
-
-    @transition(source_state=StateOne)
-    def from_state_one(self):
-        time.sleep(EXEC_TIME)
-        self._system.unique()
-
-
-class StateThreeVariantOne(State):
-
-    @transition(source_state=StateTwo, cost=2)
-    def move(self):
-        time.sleep(EXEC_TIME)
-        self._system.non_unique()
-
-
-class StateThreeVariantTwo(State):
-
-    @transition(source_state=StateTwo)
-    def from_state_two(self):
-        time.sleep(EXEC_TIME)
-        self._system.unique()
-
-
-class StateFour(State):
-
-    @transition(source_state=StateThreeVariantOne)
-    def from_v1(self):
-        time.sleep(EXEC_TIME)
-        self._system.non_unique()
-
-    @transition(source_state=StateThreeVariantTwo)
-    def from_v2(self):
-        time.sleep(EXEC_TIME)
-        self._system.non_unique()
-
-    def verify(self):
-        super(StateFour, self).verify()
-        self._system.last_verify()
-
-
-ALL_STATES = [
-    InitialState,
-    StateOne,
-    StateTwo,
-    StateThreeVariantOne,
-    StateThreeVariantTwo,
-    StateFour
-]
 
 
 class BaseFunctionsTest(unittest.TestCase):
@@ -317,6 +239,10 @@ class NegativeTestCases(unittest.TestCase):
         self.assertRaisesRegexp(TransitionError, "Failed to visit the following states: %s" % StateFour,
                                 self.smc.verify_all_states)
 
+    def test_base_state_registration(self):
+        self.smc.register_state(BaseState)
+        self.assertFalse(BaseState in self.smc._registered_states)
+
     def tearDown(self):
         self.target.reset_mock()
 
@@ -325,8 +251,18 @@ class TestStateMachineDeclaration(unittest.TestCase):
 
     def test_register_module(self):
         smc = StateMachineCrawler(mock.Mock(), InitialState)
-        smc.register_module(sys.modules[self.__module__])
-        self.assertEqual(len(smc._registered_states), 10)
+        smc.register_module(non_tpl_cases)
+
+        states = sorted([src.full_name for src in smc._state_graph])
+
+        self.assertEqual(states, [
+            'state_machine_crawler.state_machine_crawler.EntryPoint',
+            'tests.cases.InitialState',
+            'tests.cases.StateOne',
+            'tests.cases.StateTwo',
+            'tests.non_tpl_cases.TplStateOne',
+            'tests.non_tpl_cases.TplStateTwo'
+        ])
 
     def test_register_not_a_state(self):
 
@@ -334,7 +270,7 @@ class TestStateMachineDeclaration(unittest.TestCase):
             pass
 
         smc = StateMachineCrawler(mock.Mock(), InitialState)
-        self.assertRaisesRegexp(DeclarationError, "state must be a subclass of State",
+        self.assertRaisesRegexp(DeclarationError, "state .* must be a subclass of State",
                                 smc.register_state, NotAState)
 
     def test_wrong_initial_state(self):
@@ -421,19 +357,117 @@ class TestHierarchy(unittest.TestCase):
             smc.register_state(state)
         self.assertEqual(create_hierarchy(smc), {
             'tests': {
-                'InitialState': InitialState,
-                'StateFour': StateFour,
-                'StateOne': StateOne,
-                'StateThreeVariantOne': StateThreeVariantOne,
-                'StateThreeVariantTwo': StateThreeVariantTwo,
-                'StateTwo': StateTwo}})
+                'cases': {
+                    'InitialState': InitialState,
+                    'StateFour': StateFour,
+                    'StateOne': StateOne,
+                    'StateThreeVariantOne': StateThreeVariantOne,
+                    'StateThreeVariantTwo': StateThreeVariantTwo,
+                    'StateTwo': StateTwo}}})
 
-    def test_collection_hierarchy(self):
-        sub_collection = StateCollection("sub_collection")
-        sub_collection.register_state(StateOne)
-        sub_collection.register_state(StateTwo)
+    def test_register_module_custom_name(self):
+        smc = StateMachineCrawler(None, InitialState)
+        smc.register_collection(StateCollection.from_module(non_tpl_cases, "FooBar"))
+        result = create_hierarchy(smc)
+        from pprint import pprint
+        pprint(result)
+        self.assertEqual(result, {
+            'tests': {
+                'cases': {
+                    'StateOne': StateOne,
+                    'StateTwo': StateTwo,
+                    'InitialState': InitialState}},
+            'FooBar': {
+                'TplStateOne': mock.ANY,
+                'TplStateTwo': mock.ANY}})
+
+    def _assert_subclass(self, actual, expectation):
+        self.assertFalse(actual is expectation)
+        self.assertTrue(issubclass(actual, expectation))
+
+    def _create_smc(self):
+        sub_collection = StateCollection("sub_collection", {
+            "unknown_target": StateOne,
+            "another_unknown_target": StateTwo
+        })
+        sub_collection.register_state(TplStateOne)
+        sub_collection.register_state(TplStateTwo)
+
+        another_sub_collection = StateCollection("another_sub_collection", {
+            "unknown_target": StateTwo,
+            "another_unknown_target": StateOne
+        })
+        another_sub_collection.register_state(TplStateOne)
+        another_sub_collection.register_state(TplStateTwo)
+
         collection = StateCollection("collection")
-        collection.register_state(InitialState)
         collection.register_collection(sub_collection)
+        collection.register_collection(another_sub_collection)
+
         smc = StateMachineCrawler(None, InitialState)
         smc.register_collection(collection)
+
+        return smc
+
+    def test_collection_hierarchy(self):
+        result = create_hierarchy(self._create_smc())
+
+        from pprint import pprint
+        pprint(result)
+
+        self.assertEqual(result, {
+            'tests': {
+                'cases': {
+                    'StateOne': StateOne,
+                    'StateTwo': StateTwo,
+                    'InitialState': InitialState}},
+            'collection': {
+                'sub_collection': {
+                    'TplStateOne': mock.ANY,
+                    'TplStateTwo': mock.ANY
+                },
+                'another_sub_collection': {
+                    'TplStateOne': mock.ANY,
+                    'TplStateTwo': mock.ANY
+                }}})
+        self._assert_subclass(result["collection"]["sub_collection"]["TplStateOne"], TplStateOne)
+        self._assert_subclass(result["collection"]["sub_collection"]["TplStateTwo"], TplStateTwo)
+        self._assert_subclass(result["collection"]["another_sub_collection"]["TplStateOne"], TplStateOne)
+        self._assert_subclass(result["collection"]["another_sub_collection"]["TplStateTwo"], TplStateTwo)
+
+    def test_state_machine_internals(self):
+        smc = self._create_smc()
+
+        transitions = []
+        for (source, target), trans in smc._transition_map.iteritems():
+            if not isinstance(source, basestring):
+                source = source.full_name
+            if not isinstance(target, basestring):
+                target = target.full_name
+            transitions.append(source + " -(" + getattr(trans, "original", trans).__name__ + ")> " + target)
+
+        result = sorted(transitions)
+
+        from pprint import pprint
+        pprint(result)
+
+        self.assertEqual(result, [
+            'collection.another_sub_collection.TplStateOne -(from_one)> collection.another_sub_collection.TplStateTwo',
+            'collection.another_sub_collection.TplStateOne -(tempo)> state_machine_crawler.state_machine_crawler.EntryPoint',
+            'collection.another_sub_collection.TplStateOne -(to_unknown_target)> tests.cases.StateTwo',
+            'collection.another_sub_collection.TplStateTwo -(tempo)> state_machine_crawler.state_machine_crawler.EntryPoint',
+            'collection.another_sub_collection.TplStateTwo -(to_another_unknown_target)> tests.cases.StateOne',
+            'collection.sub_collection.TplStateOne -(from_one)> collection.sub_collection.TplStateTwo',
+            'collection.sub_collection.TplStateOne -(tempo)> state_machine_crawler.state_machine_crawler.EntryPoint',
+            'collection.sub_collection.TplStateOne -(to_unknown_target)> tests.cases.StateOne',
+            'collection.sub_collection.TplStateTwo -(tempo)> state_machine_crawler.state_machine_crawler.EntryPoint',
+            'collection.sub_collection.TplStateTwo -(to_another_unknown_target)> tests.cases.StateTwo',
+            'state_machine_crawler.state_machine_crawler.EntryPoint -(init)> tests.cases.InitialState',
+            'tests.cases.InitialState -(from_initial_state)> tests.cases.StateOne',
+            'tests.cases.InitialState -(from_root)> collection.another_sub_collection.TplStateOne',
+            'tests.cases.InitialState -(from_root)> collection.sub_collection.TplStateOne',
+            'tests.cases.InitialState -(tempo)> state_machine_crawler.state_machine_crawler.EntryPoint',
+            'tests.cases.StateOne -(from_state_one)> tests.cases.StateTwo',
+            'tests.cases.StateOne -(reset)> tests.cases.StateOne',
+            'tests.cases.StateOne -(tempo)> state_machine_crawler.state_machine_crawler.EntryPoint',
+            'tests.cases.StateTwo -(tempo)> state_machine_crawler.state_machine_crawler.EntryPoint'])

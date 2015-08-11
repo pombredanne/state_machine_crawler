@@ -51,6 +51,7 @@ def transition(source_state=None, target_state=None, cost=1):
         wraped_f.source_state = source_state
         wraped_f.target_state = target_state
         wraped_f.cost = cost
+        wraped_f.original = getattr(wraped_f, "original", function)
         setattr(wraped_f, "@transition@", True)
         return wraped_f
 
@@ -59,17 +60,24 @@ def transition(source_state=None, target_state=None, cost=1):
 
 class StateMetaClass(ABCMeta):
 
+    def __str__(self):
+        return "$|{0}".format(self.full_name)
+
     def __init__(self, name, bases, attrs):
         super(StateMetaClass, self).__init__(name, bases, attrs)
         self.incoming = []
         self.outgoing = []
+        self.transitions = []
+        self.with_placeholders = False
         self.full_name = self.__module__ + "." + self.__name__
+
         for name in dir(self):
             attr = getattr(self, name)
 
             if not hasattr(attr, "@transition@"):
                 continue
 
+            self.transitions.append(attr)
             target = attr.target_state
             source = attr.source_state
 
@@ -77,6 +85,8 @@ class StateMetaClass(ABCMeta):
                 target = self
 
             def _ver(item):
+                if isinstance(item, basestring):
+                    return False
                 return item and item.__name__.startswith("_")
 
             if _ver(target) or _ver(self) or _ver(source):
@@ -90,6 +100,12 @@ class StateMetaClass(ABCMeta):
                 self.incoming.append(source)
             else:
                 raise DeclarationError("No target nor source state is defined for %r" % attr)
+
+            if isinstance(attr.target_state, basestring) and attr.target_state != "self":
+                self.with_placeholders = True
+
+            if isinstance(attr.source_state, basestring):
+                self.with_placeholders = True
 
 
 class State(object):

@@ -168,6 +168,17 @@ class StateMachineCrawler(object):
 
     def _reload_graphs(self):
         self._state_graph = _create_state_map(self._registered_states)
+
+        # get rid of all the states that are not reachable from the initial one
+        dropset = set()
+        for target_state in self._state_graph:
+            if target_state is self._initial_state:
+                continue
+            if not _find_shortest_path(self._state_graph, self._initial_state, target_state):
+                dropset.add(target_state)
+        for item in dropset:
+            self._state_graph.pop(item)
+
         self._state_name_map = dict([(state.full_name, state) for state in self._state_graph])
         self._transition_map = _create_transition_map(self._registered_states)
 
@@ -178,6 +189,7 @@ class StateMachineCrawler(object):
             tempo.target_state = self.EntryPoint
             tempo.source_state = source_state
             tempo.im_class = source_state
+            tempo.original = tempo
             target_states.add(self.EntryPoint)
             self._transition_map[source_state, self.EntryPoint] = tempo
 
@@ -363,8 +375,10 @@ class StateMachineCrawler(object):
             raise TransitionError("Failed to visit the following states: %s" % ", ".join(sorted(failed_states)))
 
     def _register_state(self, state, refresh=True):
-        if not issubclass(state, State):
-            raise DeclarationError("state must be a subclass of State")
+        if not (inspect.isclass(state) and issubclass(state, State)):
+            raise DeclarationError("state {0} must be a subclass of State".format(state))
+        if state is State:
+            return
         self._registered_states.add(state)
         for state in state.incoming + state.outgoing:
             if state not in self._registered_states:
@@ -382,14 +396,6 @@ class StateMachineCrawler(object):
         """
         self._register_state(state)
 
-    def _register_collection(self, state_collection, refresh=True):
-        for collection in state_collection.collections:
-            self._register_collection(collection, False)
-        for state in state_collection.states:
-            self._register_state(state, False)
-        if refresh:
-            self._reload_graphs()
-
     def register_collection(self, state_collection):
         """
         Registeres all states in a given state collection
@@ -398,7 +404,11 @@ class StateMachineCrawler(object):
 
         >>> scm.register_collection(state_collection)
         """
-        self._register_collection(state_collection)
+        for state in state_collection.states:
+            self._register_state(state, False)
+        for state in state_collection.related_states:
+            self._register_state(state, False)
+        self._reload_graphs()
 
     def register_module(self, module):
         """
@@ -409,11 +419,4 @@ class StateMachineCrawler(object):
         >>> from foobar import module_with_states
         >>> scm.register_module(module_with_states)
         """
-        module_collection = StateCollection(module.__name__)
-        for name in dir(module):
-            if name.startswith("_"):
-                continue
-            item = getattr(module, name)
-            if inspect.isclass(item) and issubclass(item, State):
-                module_collection.register_state(item)
-        self._register_collection(module_collection)
+        self.register_collection(StateCollection.from_module(module))
