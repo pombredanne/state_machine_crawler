@@ -5,7 +5,7 @@ import sys
 import mock
 
 from state_machine_crawler import transition, StateMachineCrawler, DeclarationError, TransitionError, \
-    State as BaseState, WebView, UnreachableStateError, NonExistentStateError, MultipleStatesError
+    State as BaseState, WebView, UnreachableStateError, NonExistentStateError, MultipleStatesError, StateCollection
 from state_machine_crawler.state_machine_crawler import _create_state_map, _find_shortest_path, \
     _create_state_map_with_exclusions, _get_missing_nodes, _dfs, _equivalent, _create_transition_map
 from state_machine_crawler.serializers.dot import Serializer
@@ -415,7 +415,7 @@ class TestTransitionEquivalence(unittest.TestCase):
 
 class TestHierarchy(unittest.TestCase):
 
-    def test_main(self):
+    def test_dict(self):
         smc = StateMachineCrawler(None, InitialState)
         for state in ALL_STATES:
             smc.register_state(state)
@@ -427,3 +427,13 @@ class TestHierarchy(unittest.TestCase):
                 'StateThreeVariantOne': StateThreeVariantOne,
                 'StateThreeVariantTwo': StateThreeVariantTwo,
                 'StateTwo': StateTwo}})
+
+    def test_collection_hierarchy(self):
+        sub_collection = StateCollection("sub_collection")
+        sub_collection.register_state(StateOne)
+        sub_collection.register_state(StateTwo)
+        collection = StateCollection("collection")
+        collection.register_state(InitialState)
+        collection.register_collection(sub_collection)
+        smc = StateMachineCrawler(None, InitialState)
+        smc.register_collection(collection)

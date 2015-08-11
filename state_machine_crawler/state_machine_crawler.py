@@ -382,7 +382,15 @@ class StateMachineCrawler(object):
         """
         self._register_state(state)
 
-    def register_collection(self, state_collection, context=None):
+    def _register_collection(self, state_collection, refresh=True):
+        for collection in state_collection.collections:
+            self._register_collection(collection, False)
+        for state in state_collection.states:
+            self._register_state(state, False)
+        if refresh:
+            self._reload_graphs()
+
+    def register_collection(self, state_collection):
         """
         Registeres all states in a given state collection
 
@@ -390,9 +398,7 @@ class StateMachineCrawler(object):
 
         >>> scm.register_collection(state_collection)
         """
-        for state in state_collection.populate_templates(context):
-            self._register_state(state, False)
-        self._reload_graphs()
+        self._register_collection(state_collection)
 
     def register_module(self, module):
         """
@@ -410,4 +416,4 @@ class StateMachineCrawler(object):
             item = getattr(module, name)
             if inspect.isclass(item) and issubclass(item, State):
                 module_collection.register_state(item)
-        self.register_collection(module_collection)
+        self._register_collection(module_collection)

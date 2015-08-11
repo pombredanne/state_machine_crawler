@@ -4,6 +4,7 @@ from .errors import DeclarationError, TransitionError, UnreachableStateError, No
 from .webview import WebView
 from .cli import cli
 from .autodiscover import entry_point
+from .collection import StateCollection
 
 __all__ = ["transition", "State", "StateMachineCrawler", "DeclarationError", "TransitionError", "WebView", "cli",
-           "UnreachableStateError", "entry_point", "NonExistentStateError", "MultipleStatesError"]
+           "UnreachableStateError", "entry_point", "NonExistentStateError", "MultipleStatesError", "StateCollection"]
