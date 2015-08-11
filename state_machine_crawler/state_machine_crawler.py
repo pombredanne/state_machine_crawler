@@ -5,6 +5,7 @@ from collections import defaultdict
 from .errors import TransitionError, DeclarationError, UnreachableStateError, NonExistentStateError, MultipleStatesError
 from .blocks import State
 from .logger import StateLogger
+from .collection import StateCollection
 
 
 def _equivalent(transition_one, transition_two):
@@ -381,6 +382,18 @@ class StateMachineCrawler(object):
         """
         self._register_state(state)
 
+    def register_collection(self, state_collection, context=None):
+        """
+        Registeres all states in a given state collection
+
+        @state_collection (StateCollection instance)
+
+        >>> scm.register_collection(state_collection)
+        """
+        for state in state_collection.populate_templates(context):
+            self._register_state(state, False)
+        self._reload_graphs()
+
     def register_module(self, module):
         """
         Registeres all states from a given Python module
@@ -390,10 +403,11 @@ class StateMachineCrawler(object):
         >>> from foobar import module_with_states
         >>> scm.register_module(module_with_states)
         """
+        module_collection = StateCollection(module.__name__)
         for name in dir(module):
             if name.startswith("_"):
                 continue
             item = getattr(module, name)
             if inspect.isclass(item) and issubclass(item, State):
-                self._register_state(item, False)
-        self._reload_graphs()
+                module_collection.register_state(item)
+        self.register_collection(module_collection)
