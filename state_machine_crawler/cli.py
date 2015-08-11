@@ -74,19 +74,6 @@ def cli(scm):
 
     """
 
-    def existing_state(name):
-        states = dict(map(lambda state: (state.full_name, state), scm._state_graph.keys()))
-        found = []
-        for state_name, state in states.iteritems():
-            if name in state_name:
-                found.append(state)
-        if not found:
-            raise argparse.ArgumentTypeError("Target state does not exist")
-        elif len(found) > 1:
-            raise argparse.ArgumentTypeError("Too many states match the specified name")
-        else:
-            return found[0]
-
     parser = argparse.ArgumentParser(description='Manipulate the state machine')
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-p", "--transition-path", type=argparse.FileType('r'), default=sys.stdin,
@@ -94,13 +81,13 @@ def cli(scm):
                             "The states must be delimited by '->'. E.g. 'A -> B -> C -> D -> Z'. "
                             "It may be a standard input itself i.e. directed via a pipe.")
     group.add_argument("-t", "--target-state", help="State to which the system should be transitioned",
-                       type=existing_state)
+                       type=scm._existing_state)
     group.add_argument("-a", "--all", action="store_true", help="Exercise all states")
     group.add_argument("-s", "--some", help="Exercise all state names of which match a regexp")
     group.add_argument("-f", "--full", action="store_true",
                        help="Exercise not only all states but also all transitions")
     parser.add_argument("-w", "--with-webview", action="store_true", help="Indicates if webview should be started")
-    parser.add_argument("-c", "--current-state", type=existing_state,
+    parser.add_argument("-c", "--current-state", type=scm._existing_state,
                         help="If it is known that the system is in specific state - it is possible to specify it and"
                         " avoid extra transitions")
     parser.add_argument("-d", "--debug", action="store_true", help="print debug messages to stderr")
@@ -118,7 +105,7 @@ def cli(scm):
     if not args.without_flag:
         if os.path.exists(FLAG_FILE):
             with open(FLAG_FILE) as fil:
-                scm._current_state = existing_state(fil.read())
+                scm._current_state = scm._existing_state(fil.read())
 
     if args.current_state:
         scm._current_state = args.current_state
@@ -147,7 +134,7 @@ def cli(scm):
         elif args.target_state:
             scm.move(args.target_state)
         elif args.transition_path:
-            states = [existing_state(state.strip()) for state in args.transition_path.read().split("->")]
+            states = [scm._existing_state(state.strip()) for state in args.transition_path.read().split("->")]
             scm.move(states[0])
             for state in states[1:]:
                 scm._do_step(state)

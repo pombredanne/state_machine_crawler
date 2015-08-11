@@ -2,7 +2,7 @@ import re
 import inspect
 from collections import defaultdict
 
-from .errors import TransitionError, DeclarationError, UnreachableStateError
+from .errors import TransitionError, DeclarationError, UnreachableStateError, NonExistentStateError, MultipleStatesError
 from .blocks import State
 from .logger import StateLogger
 
@@ -167,6 +167,7 @@ class StateMachineCrawler(object):
 
     def _reload_graphs(self):
         self._state_graph = _create_state_map(self._registered_states)
+        self._state_name_map = dict([(state.full_name, state) for state in self._state_graph])
         self._transition_map = _create_transition_map(self._registered_states)
 
         for source_state, target_states in self._state_graph.iteritems():
@@ -255,6 +256,18 @@ class StateMachineCrawler(object):
             cursor = state
         return cost
 
+    def _existing_state(self, name):
+        found = []
+        for state_name, state in self._state_name_map.iteritems():
+            if name in state_name:
+                found.append(state)
+        if not found:
+            raise NonExistentStateError("State '{0}' was not registered.".format(name))
+        elif len(found) > 1:
+            raise MultipleStatesError("Multiple states match search criteria were found: {0}".format(found))
+        else:
+            return found[0]
+
     def move(self, state):
         """ Performs a transition from the current state to the state passed as an argument
 
@@ -269,6 +282,10 @@ class StateMachineCrawler(object):
             self._next_state = None
             self._current_state = self.EntryPoint
             return
+        elif isinstance(state, basestring):
+            state = self._existing_state(state)
+        elif state not in self._registered_states:
+            raise NonExistentStateError("State {0} was not registered.".format(state))
         reachable_state_graph = _create_state_map_with_exclusions(self._state_graph,
                                                                   self.EntryPoint,
                                                                   self._error_states,

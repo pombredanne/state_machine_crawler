@@ -5,7 +5,7 @@ import sys
 import mock
 
 from state_machine_crawler import transition, StateMachineCrawler, DeclarationError, TransitionError, \
-    State as BaseState, WebView, UnreachableStateError
+    State as BaseState, WebView, UnreachableStateError, NonExistentStateError, MultipleStatesError
 from state_machine_crawler.state_machine_crawler import _create_state_map, _find_shortest_path, \
     _create_state_map_with_exclusions, _get_missing_nodes, _dfs, _equivalent, _create_transition_map
 from state_machine_crawler.serializers.dot import Serializer
@@ -238,8 +238,8 @@ class PositiveTestStateMachineTransitionTest(BaseTestStateMachineTransitionCase)
     def setUp(self):
         self.smc.move(InitialState)
 
-    def test_move(self):
-        self.smc.move(StateFour)
+    def test_move_with_string(self):
+        self.smc.move("StateFour")
         self.assertEqual(self.target.enter.call_count, 1)
         self.assertEqual(self.target.unique.call_count, 3)
         self.assertEqual(self.target.non_unique.call_count, 1)
@@ -289,8 +289,14 @@ class NegativeTestCases(unittest.TestCase):
         for state in ALL_STATES:
             self.smc.register_state(state)
 
+    def test_multiple_found_states(self):
+        self.assertRaises(MultipleStatesError, self.smc.move, "State")
+
+    def test_not_found_state(self):
+        self.assertRaises(NonExistentStateError, self.smc.move, "FooBar")
+
     def test_unknown_state(self):
-        self.assertRaises(UnreachableStateError, self.smc.move, UnknownState)
+        self.assertRaises(NonExistentStateError, self.smc.move, UnknownState)
 
     def test_initial_state_verification_failure(self):
         self.target.enter.side_effect = Exception
