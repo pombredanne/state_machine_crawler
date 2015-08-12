@@ -13,13 +13,16 @@ class Serializer(object):
         self._scm = scm
         self._cluster_index = 0
 
+    def _node_id(self, state):
+        return state.full_name.strip().replace(".", "_").replace(" ", "_")
+
     def _serialize_state(self, state):  # pragma: no cover
         if state is self._scm.EntryPoint:
             shape = "doublecircle"
             label = "+"
         else:
             shape = "box"
-            label = state.__name__
+            label = state.full_name.split(".")[-1]
         if state is self._scm._current_state:
             color = "blue"
             text_color = "white"
@@ -38,8 +41,9 @@ class Serializer(object):
         else:
             color = "white"
             text_color = "black"
+
         return NODE_TPL % dict(
-            name=state.full_name.replace(".", "_"),
+            name=self._node_id(state),
             label=label,
             shape=shape,
             color=color,
@@ -64,8 +68,8 @@ class Serializer(object):
         else:
             label = "$%d" % cost
 
-        return EDGE_TPL % dict(source=source_state.full_name.replace(".", "_"),
-                               target=target_state.full_name.replace(".", "_"),
+        return EDGE_TPL % dict(source=self._node_id(source_state),
+                               target=self._node_id(target_state),
                                color=color,
                                label=label,
                                text_color=text_color)
