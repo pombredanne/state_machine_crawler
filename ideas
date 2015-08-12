@@ -1,0 +1,5 @@
+I need to replace the initial state as well and give and generate a proper link to it.
+
+Try multilevel composition for state machines.
+
+Make sure it is not possible to register multiple collections with the same name.

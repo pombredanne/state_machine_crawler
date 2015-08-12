@@ -125,6 +125,8 @@ class StateCollection(object):
             if name.startswith("_"):
                 continue
             item = getattr(module, name)
-            if inspect.isclass(item) and issubclass(item, State) and not item.with_placeholders:
-                module_collection.register_state(item)
+
+            if inspect.isclass(item) and issubclass(item, State):
+                if item.__module__ == module.__name__:
+                    module_collection.register_state(item)
         return module_collection
