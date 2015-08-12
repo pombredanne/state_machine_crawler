@@ -3,3 +3,22 @@ I need to replace the initial state as well and give and generate a proper link 
 Try multilevel composition for state machines.
 
 Make sure it is not possible to register multiple collections with the same name.
+
+Normalize graph to:
+
+{
+    "Source": {
+        "entry": __class__,
+         + DYNAMIC META (visited, current, error, next)
+        "transitions": {
+            "name" {
+                + DYNAMIC META (visited, current, error)
+                "entry": def,
+                "target": "Target"
+                "cost": 5
+            }
+        }
+    }
+}
+
+The point is to convert a mix of sources and targets into a single directional source -> target mapping.
