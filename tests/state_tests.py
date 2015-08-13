@@ -304,7 +304,7 @@ class TestTransitionEquivalence(unittest.TestCase):
         self.assertFalse(_equivalent(None, None))
 
 
-class TestHierarchy(unittest.TestCase):
+class TestCollections(unittest.TestCase):
 
     def _get_raw_state(self, smc):
         rval = smc.as_graph()
