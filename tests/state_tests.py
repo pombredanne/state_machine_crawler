@@ -262,6 +262,17 @@ class TestStateMachineDeclaration(unittest.TestCase):
 
         self.assertRaisesRegexp(DeclarationError, "No target nor source state is defined for .+", declare)
 
+    def test_duplicated_collection(self):
+
+        smc = StateMachineCrawler(mock.Mock(), InitialState)
+
+        collection_one = StateCollection("foobar")
+        collection_two = StateCollection("foobar")
+
+        smc.register_collection(collection_one)
+        self.assertRaisesRegexp(DeclarationError, "Collection called 'foobar' was already registred.",
+                                smc.register_collection, collection_two)
+
     def test_normal_declaration(self):
 
         class PlainState(BaseState):

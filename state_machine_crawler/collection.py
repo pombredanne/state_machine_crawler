@@ -13,6 +13,10 @@ class StateCollection(object):
         self._related_states = set(self._context_map.values())
         self._collections = set()
 
+    @property
+    def name(self):
+        return self._name
+
     def register_state(self, state):
         """ Add a state to a collection """
         if not issubclass(state, State):

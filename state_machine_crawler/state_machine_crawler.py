@@ -196,6 +196,7 @@ class StateMachineCrawler(object):
         self._state_graph[self.EntryPoint] = {self._initial_state}
 
     def clear(self):
+        self._registered_collections = set()
         self._next_state = None
         self._error_states = set()
         self._visited_states = set()
@@ -405,6 +406,10 @@ class StateMachineCrawler(object):
 
         >>> scm.register_collection(state_collection)
         """
+        if state_collection.name in self._registered_collections:
+            raise DeclarationError("Collection called '{0}' was already registred.".format(state_collection.name))
+        self._registered_collections.add(state_collection.name)
+
         for state in state_collection.states:
             self._register_state(state, False)
         for state in state_collection.related_states:
