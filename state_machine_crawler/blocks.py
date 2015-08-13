@@ -22,6 +22,10 @@ def transition(source_state=None, target_state=None, cost=1):
     Note: there can be only *target_state* or only *source_state* because if a transition from state **A** to state
     **B** is possible it does not at all imply that the opposite transition can be performed the same way.
 
+    It is also possible to use string values for *source_state* or *target_state* in conjunction with
+    :class:`StateCollections <state_machine_crawler.StateCollection>` subclass
+    to define the entry points.
+
     Sample usage:
 
     .. code:: python

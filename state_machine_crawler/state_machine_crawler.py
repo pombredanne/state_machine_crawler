@@ -74,7 +74,8 @@ def _create_transition_map(all_states):
 def _create_state_map_with_exclusions(graph, entry_point, state_exclusion_list=None,
                                       transition_exclusion_list=None,
                                       filtered_graph=None):
-    """ Creates a sub_graph of a @graph with an assumption that a bunch of nodes from @state_exclusion_list are not
+    """
+    Creates a sub_graph of a @graph with an assumption that a bunch of nodes from @state_exclusion_list are not
     reachable
     """
     filtered_graph = filtered_graph or {}
@@ -319,8 +320,10 @@ class StateMachineCrawler(object):
         """
         Makes sure that all states can be visited. It uses a depth first search to find the somewhat the quickest path.
 
-        @pattern (str=None): visits only the states full names of which match the pattern
-        @full (bool=False): if True, not only all states are visited but also all transitions are exercised
+        pattern (str=None)
+            visits only the states full names of which match the pattern
+        full (bool=False)
+            if True, not only all states are visited but also all transitions are exercised
         """
 
         all_states_to_check = _dfs(self._state_graph, self._initial_state)
@@ -392,7 +395,7 @@ class StateMachineCrawler(object):
         """
         Registeres a concrete state and all states related to it inside the state machine
 
-        @state (State subclass)
+        state (State subclass)
 
         >>> scm.register_state(SomeState)
         """
@@ -402,7 +405,7 @@ class StateMachineCrawler(object):
         """
         Registeres all states in a given state collection
 
-        @state_collection (StateCollection instance)
+        state_collection (StateCollection instance)
 
         >>> scm.register_collection(state_collection)
         """
@@ -420,7 +423,7 @@ class StateMachineCrawler(object):
         """
         Registeres all states from a given Python module
 
-        @module (python module)
+        module (python module)
 
         >>> from foobar import module_with_states
         >>> scm.register_module(module_with_states)

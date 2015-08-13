@@ -19,6 +19,13 @@ The crawler
 .. autoclass:: state_machine_crawler.StateMachineCrawler
     :members:
 
+State collections
+-----------------
+
+.. autoclass:: state_machine_crawler.StateCollection
+    :members:
+
+
 Error class
 -----------
 

@@ -5,29 +5,88 @@ from .blocks import State, transition
 
 
 class StateCollection(object):
+    """
+    name (string=None)
+        Collection name. Defaults to module name.
+    context_map (dict)
+        A mapping between state entry points and the actual states.
+
+    In some cases there is a need to join a bunch of states coming from different modules into a single logical unit.
+
+    In order to achieve this declare a collection, add a bunch of states to it and register the collection to a
+    state machine:
+
+    .. code:: python
+
+        ...
+
+        collection = StateCollection("My collection")
+        collection.register_state(StateOne)
+        collection.register_state(StateTwo)
+
+        scm.register_collection(collection)
+
+    Once joined into a collection, states shall be shown as logical cluster in a webview.
+
+    Apart from entirely decorational use, there is also a practical usecase.
+
+    States can be declared with entry points for their transitions:
+
+    .. code:: python
+
+        ...
+
+        class SampleState(State):
+
+            @transition(source_state="initial_state")
+            def move(self):
+                ...
+
+        collection_one = StateCollection("one", {
+            "initial_state": StateOne
+        })
+
+        collection_two = StateCollection("one", {
+            "initial_state": StateTwo
+        })
+
+    If the entry points are used as above the framework creates two subclasses of SampleState. One with StateOne
+    as a source for the *move* transition and one with StateTwo.
+    """
 
     def __init__(self, name, context_map=None):
         self._name = name
         self._states = set()
         self._context_map = dict(context_map or {})
         self._related_states = set(self._context_map.values())
-        self._collections = set()
+        self._collections = {}
 
     @property
     def name(self):
         return self._name
 
     def register_state(self, state):
-        """ Add a state to a collection """
+        """
+        Adds a state to a collection
+
+        state
+            :class:`State <state_machine_crawler.State>` subclass
+
+        """
         if not issubclass(state, State):
             raise DeclarationError("{0} must be a State subclass".format(state))
         self._states.add(state)
 
     def register_collection(self, collection):
-        """ Add a subcollection """
+        """
+        Adds a subcollection
+
+        collection
+            :class:`StateCollection <state_machine_crawler.StateCollection>` subclass
+        """
         if not isinstance(collection, StateCollection):
             raise DeclarationError("{0} must be a StateCollection instance".format(collection))
-        self._collections.add(collection)
+        self._collections[collection.name] = collection
 
     def _create_state(self, parent):
 
@@ -97,7 +156,7 @@ class StateCollection(object):
                 state = self._create_state(state)
             states.add(state)
 
-        for col in self._collections:
+        for col in self._collections.itervalues():
             for state in col.states:
                 state.full_name = self._name + "." + state.full_name
                 states.add(state)
@@ -111,19 +170,37 @@ class StateCollection(object):
     @property
     def related_states(self):
         """
-        Returns a set of states that do not directly belong to the collection but are referenced from the inside one
-        way or another.
+        returns (set)
+            states that do not directly belong to the collection but are referenced from the inside one way or another.
         """
         states = set()
         for state in self._related_states:
             states.add(state)
-        for col in self._collections:
+        for col in self._collections.itervalues():
             for state in col.related_states:
                 states.add(state)
         return states
 
     @classmethod
     def from_module(cls, module, name=None, context_map=None):
+        """
+        Creates a collection from a module.
+
+        module (Python module)
+            All State subclasses from this module are added to the collection.
+
+        name, context_map
+            See constructor
+
+        .. code:: python
+
+            collection = StateCollection(sample_module, "Given name", {
+                "Entry point": SampleStateOne,
+                "Other entry point": SampleStateTwo
+            })
+
+        """
+
         module_collection = cls(name or module.__name__, context_map=context_map)
         for name in dir(module):
             if name.startswith("_"):
