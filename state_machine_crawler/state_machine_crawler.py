@@ -196,6 +196,7 @@ class StateMachineCrawler(object):
         self._state_graph[self.EntryPoint] = {self._initial_state}
 
     def clear(self):
+        self._next_state = None
         self._error_states = set()
         self._visited_states = set()
         self._visited_transitions = set()
@@ -420,3 +421,38 @@ class StateMachineCrawler(object):
         >>> scm.register_module(module_with_states)
         """
         self.register_collection(StateCollection.from_module(module))
+
+    def as_graph(self):
+        """ Returns a full graph representation of the state machine as a dict """
+        states = {}
+
+        for state in self._state_graph:
+            states[state.full_name] = {
+                "_entry": state,
+                "name": state.full_name,
+                "current": state is self._current_state,
+                "next": state is self._next_state,
+                "visited": state in self._visited_states,
+                "failed": state in self._error_states,
+                "transitions": {}
+            }
+
+        for (source, target), transition in self._transition_map.iteritems():
+            if target is self.EntryPoint:
+                continue
+
+            failed = (source, target) in self._error_transitions or source in self._error_states or \
+                target in self._error_states
+
+            states[source.full_name]["transitions"][target.full_name] = {
+                "_entry": transition,
+                "current": self._current_state is source and self._next_state is target,
+                "name": transition.original.__name__,
+                "target": target.full_name,
+                "source": source.full_name,
+                "cost": transition.cost,
+                "visited": (source, target) in self._visited_transitions,
+                "failed": failed
+            }
+
+        return states

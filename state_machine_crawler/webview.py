@@ -12,7 +12,7 @@ from werkzeug.wrappers import Response, Request
 from werkzeug.routing import Map, Rule
 from werkzeug.wsgi import wrap_file
 
-from .serializers import svg, text, dot, js
+from .serializers import svg, text, dot
 
 
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -64,8 +64,7 @@ class WebView(object):
     SERIALIZER_MAP = {
         "svg": svg,
         "txt": text,
-        "dot": dot,
-        "json": js
+        "dot": dot
     }
 
     def __init__(self, state_machine):

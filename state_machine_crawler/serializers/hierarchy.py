@@ -1,15 +1,25 @@
-def create_hierarchy(scm):
-    """ Creates a cluster hiearachy from the state machine """
-    root = {}
+from collections import defaultdict
 
-    for name, state in scm._state_name_map.iteritems():
-        if state is scm.EntryPoint:
-            continue
-        parent_result = local_result = root
-        nodes = name.split(".")
-        for node in nodes:
-            parent_result = local_result
-            local_result = local_result.setdefault(node, {})
-        parent_result[nodes[-1]] = state
 
-    return root
+def create_hierarchy(graph):
+    states = defaultdict(dict)
+    for key, value in graph.iteritems():
+        cursor = states
+        nodes = key.split(".")
+        parents = nodes[:-1]
+        item = nodes[-1]
+
+        for node in parents:
+            cursor[node] = cursor.get(node, {})
+            cursor = cursor[node]
+
+        cursor[item] = value
+
+    return states
+
+
+def get_all_transitions(graph):
+    transitions = []
+    for val in graph.itervalues():
+        transitions.extend(val["transitions"].values())
+    return transitions

@@ -6,46 +6,12 @@ from state_machine_crawler import transition, StateMachineCrawler, DeclarationEr
     State as BaseState, WebView, UnreachableStateError, NonExistentStateError, MultipleStatesError, StateCollection
 from state_machine_crawler.state_machine_crawler import _create_state_map, _find_shortest_path, \
     _create_state_map_with_exclusions, _get_missing_nodes, _dfs, _equivalent, _create_transition_map
-from state_machine_crawler.serializers.dot import Serializer
-from state_machine_crawler.serializers.hierarchy import create_hierarchy
 
 from .cases import ALL_STATES, InitialState, StateOne, StateTwo, StateThreeVariantOne, StateThreeVariantTwo, \
     StateFour, EXEC_TIME, UnknownState, State
 from .tpl_cases import TplStateOne, TplStateTwo
 from . import non_tpl_cases
-
-
-# dot -Tpng test.dot -o test.png
-DOT_GRAPH = """digraph StateMachine {
-    splines=polyline;
-     concentrate=true;
-     rankdir=LR;
-    state_machine_crawler_state_machine_crawler_EntryPoint [style=filled label="+" shape=doublecircle fillcolor=forestgreen fontcolor=white];
-    subgraph cluster_2 {
-    label="tests";
-    color=blue;
-    fontcolor=blue;
-    subgraph cluster_3 {
-    label="cases";
-    color=blue;
-    fontcolor=blue;
-    tests_cases_StateTwo [style=filled label="StateTwo" shape=box fillcolor=blue fontcolor=white];
-    tests_cases_StateThreeVariantOne [style=filled label="StateThreeVariantOne" shape=box fillcolor=white fontcolor=black];
-    tests_cases_StateFour [style=filled label="StateFour" shape=box fillcolor=white fontcolor=black];
-    tests_cases_InitialState [style=filled label="InitialState" shape=box fillcolor=forestgreen fontcolor=white];
-    tests_cases_StateOne [style=filled label="StateOne" shape=box fillcolor=forestgreen fontcolor=white];
-    tests_cases_StateThreeVariantTwo [style=filled label="StateThreeVariantTwo" shape=box fillcolor=white fontcolor=black];
-    }
-    }
-    tests_cases_StateThreeVariantTwo -> tests_cases_StateFour [color=black fontcolor=black label=" "];
-    tests_cases_StateOne -> tests_cases_StateOne [color=black fontcolor=black label=" "];
-    tests_cases_StateOne -> tests_cases_StateTwo [color=forestgreen fontcolor=forestgreen label=" "];
-    tests_cases_InitialState -> tests_cases_StateOne [color=forestgreen fontcolor=forestgreen label=" "];
-    state_machine_crawler_state_machine_crawler_EntryPoint -> tests_cases_InitialState [color=forestgreen fontcolor=forestgreen label=" "];
-    tests_cases_StateThreeVariantOne -> tests_cases_StateFour [color=black fontcolor=black label=" "];
-    tests_cases_StateTwo -> tests_cases_StateThreeVariantOne [color=black fontcolor=black label="$2"];
-    tests_cases_StateTwo -> tests_cases_StateThreeVariantTwo [color=black fontcolor=black label=" "];
-}"""
+from .utils import print_struct
 
 
 class BaseFunctionsTest(unittest.TestCase):
@@ -313,17 +279,6 @@ class TestStateMachineDeclaration(unittest.TestCase):
                 pass
 
 
-class TestStateMachineSerialization(BaseTestStateMachineTransitionCase):
-
-    def test_repr(self):
-        self.smc.move(StateTwo)
-        value = repr(Serializer(self.smc))
-        target_lines = DOT_GRAPH.replace("\n", "").replace("    ", "").replace("}", "};").replace("{", "{;").split(";")
-        real_lines = value.replace("}", "};").replace("{", "{;").split(";")
-        print value.replace(";", ";\n    ").replace("}", "}\n    ").replace("{", "{\n    ")
-        self.assertEqual(sorted(real_lines), sorted(target_lines))
-
-
 class TestTransitionEquivalence(unittest.TestCase):
 
     def test_subclasses(self):
@@ -351,41 +306,142 @@ class TestTransitionEquivalence(unittest.TestCase):
 
 class TestHierarchy(unittest.TestCase):
 
+    def _get_raw_state(self, smc):
+        rval = smc.as_graph()
+
+        for state_name, info in rval.iteritems():
+            for key in ["next", "current", "failed", "visited", "_entry", "name"]:
+                info.pop(key, None)
+            for trans, data in info["transitions"].iteritems():
+                for key in ["visited", "cost", "failed", "_entry", "target", "source", "current"]:
+                    data.pop(key, None)
+
+        return rval
+
     def test_dict(self):
         smc = StateMachineCrawler(None, InitialState)
         for state in ALL_STATES:
             smc.register_state(state)
-        self.assertEqual(create_hierarchy(smc), {
-            'tests': {
-                'cases': {
-                    'InitialState': InitialState,
-                    'StateFour': StateFour,
-                    'StateOne': StateOne,
-                    'StateThreeVariantOne': StateThreeVariantOne,
-                    'StateThreeVariantTwo': StateThreeVariantTwo,
-                    'StateTwo': StateTwo}}})
+
+        rval = self._get_raw_state(smc)
+
+        print_struct(rval)
+
+        self.assertEqual(rval, {
+            "tests.cases.StateThreeVariantTwo": {
+                "transitions": {
+                    "tests.cases.StateFour": {
+                        "name": "from_v2"
+                    }
+                }
+            },
+            "tests.cases.InitialState": {
+                "transitions": {
+                    "tests.cases.StateOne": {
+                        "name": "from_initial_state"
+                    }
+                }
+            },
+            "tests.cases.StateTwo": {
+                "transitions": {
+                    "tests.cases.StateThreeVariantOne": {
+                        "name": "move"
+                    },
+                    "tests.cases.StateThreeVariantTwo": {
+                        "name": "from_state_two"
+                    }
+                }
+            },
+            "tests.cases.StateFour": {
+                "transitions": {
+                }
+            },
+            "state_machine_crawler.state_machine_crawler.EntryPoint": {
+                "transitions": {
+                    "tests.cases.InitialState": {
+                        "name": "init"
+                    }
+                }
+            },
+            "tests.cases.StateOne": {
+                "transitions": {
+                    "tests.cases.StateTwo": {
+                        "name": "from_state_one"
+                    },
+                    "tests.cases.StateOne": {
+                        "name": "reset"
+                    }
+                }
+            },
+            "tests.cases.StateThreeVariantOne": {
+                "transitions": {
+                    "tests.cases.StateFour": {
+                        "name": "from_v1"
+                    }
+                }
+            }
+        })
 
     def test_register_module_custom_name(self):
         smc = StateMachineCrawler(None, InitialState)
         smc.register_collection(StateCollection.from_module(non_tpl_cases, "FooBar"))
-        result = create_hierarchy(smc)
-        from pprint import pprint
-        pprint(result)
-        self.assertEqual(result, {
-            'tests': {
-                'cases': {
-                    'StateOne': StateOne,
-                    'StateTwo': StateTwo,
-                    'InitialState': InitialState}},
-            'FooBar': {
-                'TplStateOne': mock.ANY,
-                'TplStateTwo': mock.ANY}})
 
-    def _assert_subclass(self, actual, expectation):
-        self.assertFalse(actual is expectation)
-        self.assertTrue(issubclass(actual, expectation))
+        rval = self._get_raw_state(smc)
 
-    def _create_smc(self):
+        print_struct(rval)
+
+        self.assertEqual(rval, {
+            "FooBar.TplStateTwo": {
+                "transitions": {
+                    "tests.cases.StateTwo": {
+                        "name": "to_another_unknown_target"
+                    }
+                }
+            },
+            "FooBar.TplStateOne": {
+                "transitions": {
+                    "FooBar.TplStateTwo": {
+                        "name": "from_one"
+                    },
+                    "tests.cases.StateOne": {
+                        "name": "to_unknown_target"
+                    }
+                }
+            },
+            "tests.cases.InitialState": {
+                "transitions": {
+                    "FooBar.TplStateOne": {
+                        "name": "from_root"
+                    },
+                    "tests.cases.StateOne": {
+                        "name": "from_initial_state"
+                    }
+                }
+            },
+            "tests.cases.StateTwo": {
+                "transitions": {
+                }
+            },
+            "state_machine_crawler.state_machine_crawler.EntryPoint": {
+                "transitions": {
+                    "tests.cases.InitialState": {
+                        "name": "init"
+                    }
+                }
+            },
+            "tests.cases.StateOne": {
+                "transitions": {
+                    "tests.cases.StateTwo": {
+                        "name": "from_state_one"
+                    },
+                    "tests.cases.StateOne": {
+                        "name": "reset"
+                    }
+                }
+            }
+        })
+
+    def test_multilayer_collection(self):
         sub_collection = StateCollection("sub_collection", {
             "unknown_target": StateOne,
             "another_unknown_target": StateTwo
@@ -407,67 +463,77 @@ class TestHierarchy(unittest.TestCase):
         smc = StateMachineCrawler(None, InitialState)
         smc.register_collection(collection)
 
-        return smc
+        rval = self._get_raw_state(smc)
 
-    def test_collection_hierarchy(self):
-        result = create_hierarchy(self._create_smc())
+        print_struct(rval)
 
-        from pprint import pprint
-        pprint(result)
-
-        self.assertEqual(result, {
-            'tests': {
-                'cases': {
-                    'StateOne': StateOne,
-                    'StateTwo': StateTwo,
-                    'InitialState': InitialState}},
-            'collection': {
-                'sub_collection': {
-                    'TplStateOne': mock.ANY,
-                    'TplStateTwo': mock.ANY
-                },
-                'another_sub_collection': {
-                    'TplStateOne': mock.ANY,
-                    'TplStateTwo': mock.ANY
-                }}})
-        self._assert_subclass(result["collection"]["sub_collection"]["TplStateOne"], TplStateOne)
-        self._assert_subclass(result["collection"]["sub_collection"]["TplStateTwo"], TplStateTwo)
-        self._assert_subclass(result["collection"]["another_sub_collection"]["TplStateOne"], TplStateOne)
-        self._assert_subclass(result["collection"]["another_sub_collection"]["TplStateTwo"], TplStateTwo)
-
-    def test_state_machine_internals(self):
-        smc = self._create_smc()
-
-        transitions = []
-        for (source, target), trans in smc._transition_map.iteritems():
-            if not isinstance(source, basestring):
-                source = source.full_name
-            if not isinstance(target, basestring):
-                target = target.full_name
-            transitions.append(source + " -(" + getattr(trans, "original", trans).__name__ + ")> " + target)
-
-        result = sorted(transitions)
-
-        from pprint import pprint
-        pprint(result)
-
-        self.assertEqual(result, [
-            'collection.another_sub_collection.TplStateOne -(from_one)> collection.another_sub_collection.TplStateTwo',
-            'collection.another_sub_collection.TplStateOne -(tempo)> state_machine_crawler.state_machine_crawler.EntryPoint',
-            'collection.another_sub_collection.TplStateOne -(to_unknown_target)> tests.cases.StateTwo',
-            'collection.another_sub_collection.TplStateTwo -(tempo)> state_machine_crawler.state_machine_crawler.EntryPoint',
-            'collection.another_sub_collection.TplStateTwo -(to_another_unknown_target)> tests.cases.StateOne',
-            'collection.sub_collection.TplStateOne -(from_one)> collection.sub_collection.TplStateTwo',
-            'collection.sub_collection.TplStateOne -(tempo)> state_machine_crawler.state_machine_crawler.EntryPoint',
-            'collection.sub_collection.TplStateOne -(to_unknown_target)> tests.cases.StateOne',
-            'collection.sub_collection.TplStateTwo -(tempo)> state_machine_crawler.state_machine_crawler.EntryPoint',
-            'collection.sub_collection.TplStateTwo -(to_another_unknown_target)> tests.cases.StateTwo',
-            'state_machine_crawler.state_machine_crawler.EntryPoint -(init)> tests.cases.InitialState',
-            'tests.cases.InitialState -(from_initial_state)> tests.cases.StateOne',
-            'tests.cases.InitialState -(from_root)> collection.another_sub_collection.TplStateOne',
-            'tests.cases.InitialState -(from_root)> collection.sub_collection.TplStateOne',
-            'tests.cases.InitialState -(tempo)> state_machine_crawler.state_machine_crawler.EntryPoint',
-            'tests.cases.StateOne -(from_state_one)> tests.cases.StateTwo',
-            'tests.cases.StateOne -(reset)> tests.cases.StateOne',
-            'tests.cases.StateOne -(tempo)> state_machine_crawler.state_machine_crawler.EntryPoint',
-            'tests.cases.StateTwo -(tempo)> state_machine_crawler.state_machine_crawler.EntryPoint'])
+        self.assertEqual(rval, {
+            "tests.cases.InitialState": {
+                "transitions": {
+                    "collection.another_sub_collection.TplStateOne": {
+                        "name": "from_root"
+                    },
+                    "tests.cases.StateOne": {
+                        "name": "from_initial_state"
+                    },
+                    "collection.sub_collection.TplStateOne": {
+                        "name": "from_root"
+                    }
+                }
+            },
+            "collection.another_sub_collection.TplStateOne": {
+                "transitions": {
+                    "tests.cases.StateTwo": {
+                        "name": "to_unknown_target"
+                    },
+                    "collection.another_sub_collection.TplStateTwo": {
+                        "name": "from_one"
+                    }
+                }
+            },
+            "tests.cases.StateTwo": {
+                "transitions": {
+                }
+            },
+            "collection.sub_collection.TplStateTwo": {
+                "transitions": {
+                    "tests.cases.StateTwo": {
+                        "name": "to_another_unknown_target"
+                    }
+                }
+            },
+            "state_machine_crawler.state_machine_crawler.EntryPoint": {
+                "transitions": {
+                    "tests.cases.InitialState": {
+                        "name": "init"
+                    }
+                }
+            },
+            "tests.cases.StateOne": {
+                "transitions": {
+                    "tests.cases.StateTwo": {
+                        "name": "from_state_one"
+                    },
+                    "tests.cases.StateOne": {
+                        "name": "reset"
+                    }
+                }
+            },
+            "collection.another_sub_collection.TplStateTwo": {
+                "transitions": {
+                    "tests.cases.StateOne": {
+                        "name": "to_another_unknown_target"
+                    }
+                }
+            },
+            "collection.sub_collection.TplStateOne": {
+                "transitions": {
+                    "tests.cases.StateOne": {
+                        "name": "to_unknown_target"
+                    },
+                    "collection.sub_collection.TplStateTwo": {
+                        "name": "from_one"
+                    }
+                }
+            }
+        })
