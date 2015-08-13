@@ -1,3 +1,8 @@
+8.1 2015-08-13
+
+    [Anton Berezin <gurunars@gmail.com>]
+        * MINOR: introduced a StateCollection
+
 8.0 2015-08-10
 
     [Anton Berezin <gurunars@gmail.com>]
