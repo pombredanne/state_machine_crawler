@@ -6,6 +6,7 @@ from .cases import ALL_STATES, InitialState, StateOne, StateTwo
 from .tpl_cases import TplStateOne, TplStateTwo
 from . import non_tpl_cases
 from .utils import print_struct
+from . import solo_tpl_state
 
 
 class TestCollections(unittest.TestCase):
@@ -237,6 +238,72 @@ class TestCollections(unittest.TestCase):
                     },
                     "collection.sub_collection.TplStateTwo": {
                         "name": "from_one"
+                    }
+                }
+            }
+        })
+
+    def test_multilayer_top_level_collections(self):
+
+        smc = StateMachineCrawler(None, InitialState)
+
+        smc.register_collection(StateCollection.from_module(solo_tpl_state, "One", {
+            "LaunchedState": StateOne
+        }))
+        smc.register_collection(StateCollection.from_module(solo_tpl_state, "Two", {
+            "LaunchedState": StateTwo
+        }))
+
+        rval = self._get_raw_state(smc)
+
+        print_struct(rval)
+
+        self.assertEqual(rval, {
+            "One.SoloTplState": {
+                "transitions": {
+                    "tests.cases.StateOne": {
+                        "name": "back"
+                    }
+                }
+            },
+            "tests.cases.InitialState": {
+                "transitions": {
+                    "tests.cases.StateOne": {
+                        "name": "from_initial_state"
+                    }
+                }
+            },
+            "tests.cases.StateTwo": {
+                "transitions": {
+                    "Two.SoloTplState": {
+                        "name": "there"
+                    }
+                }
+            },
+            "Two.SoloTplState": {
+                "transitions": {
+                    "tests.cases.StateTwo": {
+                        "name": "back"
+                    }
+                }
+            },
+            "state_machine_crawler.state_machine_crawler.EntryPoint": {
+                "transitions": {
+                    "tests.cases.InitialState": {
+                        "name": "init"
+                    }
+                }
+            },
+            "tests.cases.StateOne": {
+                "transitions": {
+                    "tests.cases.StateTwo": {
+                        "name": "from_state_one"
+                    },
+                    "One.SoloTplState": {
+                        "name": "there"
+                    },
+                    "tests.cases.StateOne": {
+                        "name": "reset"
                     }
                 }
             }
