@@ -86,6 +86,7 @@ class StateCollection(object):
         """
         if not isinstance(collection, StateCollection):
             raise DeclarationError("{0} must be a StateCollection instance".format(collection))
+        collection._context_map.update(self._context_map)
         self._collections[collection.name] = collection
 
     def _create_state(self, parent):

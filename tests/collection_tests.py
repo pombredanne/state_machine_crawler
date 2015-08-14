@@ -7,6 +7,7 @@ from .tpl_cases import TplStateOne, TplStateTwo
 from . import non_tpl_cases
 from .utils import print_struct
 from . import solo_tpl_state
+from . import tpl_cases
 
 
 class TestCollections(unittest.TestCase):
@@ -243,23 +244,26 @@ class TestCollections(unittest.TestCase):
             }
         })
 
-    def test_multilayer_top_level_collections(self):
+    def test_passing_context_through_layer(self):
 
         smc = StateMachineCrawler(None, InitialState)
 
-        smc.register_collection(StateCollection.from_module(solo_tpl_state, "One", {
-            "LaunchedState": StateOne
-        }))
-        smc.register_collection(StateCollection.from_module(solo_tpl_state, "Two", {
-            "LaunchedState": StateTwo
-        }))
+        top_collection = StateCollection("top", {
+            "LaunchedState": StateOne,
+            "unknown_target": StateTwo,
+            "another_unknown_target": StateOne
+        })
+        top_collection.register_collection(StateCollection.from_module(solo_tpl_state, "SOLO"))
+        top_collection.register_collection(StateCollection.from_module(tpl_cases, "TPL"))
+
+        smc.register_collection(top_collection)
 
         rval = self._get_raw_state(smc)
 
         print_struct(rval)
 
         self.assertEqual(rval, {
-            "One.SoloTplState": {
+            "top.SOLO.SoloTplState": {
                 "transitions": {
                     "tests.cases.StateOne": {
                         "name": "back"
@@ -268,6 +272,9 @@ class TestCollections(unittest.TestCase):
             },
             "tests.cases.InitialState": {
                 "transitions": {
+                    "top.TPL.TplStateOne": {
+                        "name": "from_root"
+                    },
                     "tests.cases.StateOne": {
                         "name": "from_initial_state"
                     }
@@ -275,15 +282,22 @@ class TestCollections(unittest.TestCase):
             },
             "tests.cases.StateTwo": {
                 "transitions": {
-                    "Two.SoloTplState": {
-                        "name": "there"
+                }
+            },
+            "top.TPL.TplStateTwo": {
+                "transitions": {
+                    "tests.cases.StateOne": {
+                        "name": "to_another_unknown_target"
                     }
                 }
             },
-            "Two.SoloTplState": {
+            "top.TPL.TplStateOne": {
                 "transitions": {
+                    "top.TPL.TplStateTwo": {
+                        "name": "from_one"
+                    },
                     "tests.cases.StateTwo": {
-                        "name": "back"
+                        "name": "to_unknown_target"
                     }
                 }
             },
@@ -299,11 +313,11 @@ class TestCollections(unittest.TestCase):
                     "tests.cases.StateTwo": {
                         "name": "from_state_one"
                     },
-                    "One.SoloTplState": {
-                        "name": "there"
-                    },
                     "tests.cases.StateOne": {
                         "name": "reset"
+                    },
+                    "top.SOLO.SoloTplState": {
+                        "name": "there"
                     }
                 }
             }
