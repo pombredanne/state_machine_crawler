@@ -37,11 +37,11 @@ def _import(name):
 
 def entry_point():
     """
-    Entry point **state-machine-crawler** to manipulate the state machine via a command line.
+    Entry point for **state-machine-crawler** to manipulate the state machine via a command line.
 
     Discovers state machine's instance based on data from 'state_machine_crawler.json' file.
 
-    JSON config file must have an 'instance' field that has to represent a Python module name of a
+    JSON config file must have an 'instance' field that should contain a full Python path of a
     :class:`StateMachineCrawler <state_machine_crawler.StateMachineCrawler>` instance.
 
     It also may contain a 'path' field that would be either a relative (with respect to parent directory of a the

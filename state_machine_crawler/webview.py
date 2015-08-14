@@ -54,7 +54,7 @@ class WebView(object):
     >>> app.stop()
 
     Once the code is executed, a web service monitoring your state machine shall be started under
-    http://localhost:8666. The url shall be printed to stdout to ease the access.
+    `http://localhost:8666 <http://localhost:8666>`_. The url shall be printed to stdout to ease the access.
 
     An html page of the web service is a dynamic view of the graph that represents the state machine.
     """

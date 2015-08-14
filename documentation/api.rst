@@ -46,9 +46,8 @@ When state machine gets big it might become difficult to monitor state transitio
 Command line interface
 ----------------------
 
-In most common case the developer wants to be able to manipulate the
-`SUT <http://en.wikipedia.org/wiki/System_under_test>`_ without launching python emulator and just use some sort of
-command line utility.
+In most common case the developer wants to be able to manipulate the `SUT <http://xunitpatterns.com/SUT.html>`_ without
+launching python emulator and just use some sort of command line utility.
 
 The package provides an autodiscoverable CLI:
 

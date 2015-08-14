@@ -115,7 +115,7 @@ class StateMetaClass(ABCMeta):
 class State(object):
     """ A base class for any state of the system
 
-    States have a *_system* attribute that represents the entity with which they are associated.
+    States have a *_system* attribute that represents a `SUT <http://xunitpatterns.com/SUT.html>`_.
     """
     __metaclass__ = StateMetaClass
 
