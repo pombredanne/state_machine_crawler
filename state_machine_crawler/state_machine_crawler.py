@@ -172,18 +172,6 @@ class StateMachineCrawler(object):
             self._state_graph.pop(item)
 
         self._state_name_map = dict([(state.full_name, state) for state in self._state_graph])
-        self._transition_map = _create_transition_map(self._registered_states)
-
-        for source_state, target_states in self._state_graph.iteritems():
-            def tempo(ep_instance):
-                pass
-            tempo.cost = 0
-            tempo.target_state = self.EntryPoint
-            tempo.source_state = source_state
-            tempo.im_class = source_state
-            tempo.original = tempo
-            target_states.add(self.EntryPoint)
-            self._transition_map[source_state, self.EntryPoint] = tempo
 
         self._state_graph[self.EntryPoint] = {self._initial_state}
 
@@ -259,7 +247,7 @@ class StateMachineCrawler(object):
         cost = 0
         cursor = states[0]
         for state in states[1:]:
-            cost += self._transition_map[cursor, state].cost
+            cost += self.as_graph(True)[cursor.full_name]["transitions"][state.full_name]["_entry"].cost
             cursor = state
         return cost
 
@@ -443,7 +431,20 @@ class StateMachineCrawler(object):
                 "transitions": {}
             }
 
-        for (source, target), transition in self._transition_map.iteritems():
+        transition_map = _create_transition_map(self._registered_states)
+
+        for source_state, target_states in self._state_graph.iteritems():
+            def tempo(ep_instance):
+                pass
+            tempo.cost = 0
+            tempo.target_state = self.EntryPoint
+            tempo.source_state = source_state
+            tempo.im_class = source_state
+            tempo.original = tempo
+            target_states.add(self.EntryPoint)
+            transition_map[source_state, self.EntryPoint] = tempo
+
+        for (source, target), transition in transition_map.iteritems():
             if target is self.EntryPoint and not include_entry_point:
                 continue
 
