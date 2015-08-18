@@ -211,7 +211,7 @@ class StateMachineCrawler(object):
         if self._current_state is self.EntryPoint:
             self._history = []
         self._next_state = next_state
-        transition = self._transition_map[self._current_state, next_state]
+        transition = self.as_graph(True)[self._current_state.full_name]["transitions"][next_state.full_name]["_entry"]
         self.log.msg(self._current_state, self._next_state)
         self.log.transition()
         try:
@@ -421,8 +421,15 @@ class StateMachineCrawler(object):
         """
         self.register_collection(StateCollection.from_module(module))
 
-    def as_graph(self):
-        """ Returns a full graph representation of the state machine as a dict """
+    def as_graph(self, include_entry_point=False):
+        """
+        Returns a full graph representation of the state machine as a dict
+
+        include_entry_point (bool=False)
+            If True, the graph shall include the initial entry point and all related transitions.
+            If False, the initial entry point and all related transitions are excluded from the graph
+
+        """
         states = {}
 
         for state in self._state_graph:
@@ -437,7 +444,7 @@ class StateMachineCrawler(object):
             }
 
         for (source, target), transition in self._transition_map.iteritems():
-            if target is self.EntryPoint:
+            if target is self.EntryPoint and not include_entry_point:
                 continue
 
             failed = (source, target) in self._error_transitions or source in self._error_states or \
