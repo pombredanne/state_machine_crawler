@@ -8,15 +8,6 @@ from .logger import StateLogger
 from .collection import StateCollection
 
 
-def _equivalent(transition_one, transition_two):
-    if not (transition_one and transition_two):
-        return False
-    p1 = transition_one.source_state == transition_two.source_state
-    p2 = transition_one.target_state == transition_two.target_state
-    p3 = transition_one.im_class == transition_two.im_class
-    return p1 and p2 and p3
-
-
 def _find_shortest_path(graph, start, end, path=[], get_cost=len):
     """ Derived from `here <https://www.python.org/doc/essays/graphs/>`_
 

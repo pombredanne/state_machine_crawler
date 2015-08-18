@@ -5,7 +5,7 @@ import mock
 from state_machine_crawler import transition, StateMachineCrawler, DeclarationError, TransitionError, \
     State as BaseState, WebView, UnreachableStateError, NonExistentStateError, MultipleStatesError, StateCollection
 from state_machine_crawler.state_machine_crawler import _create_state_map, _find_shortest_path, \
-    _create_state_map_with_exclusions, _get_missing_nodes, _dfs, _equivalent, _create_transition_map
+    _create_state_map_with_exclusions, _get_missing_nodes, _dfs, _create_transition_map
 
 from .cases import ALL_STATES, InitialState, StateOne, StateTwo, StateThreeVariantOne, StateThreeVariantTwo, \
     StateFour, EXEC_TIME, UnknownState, State
@@ -286,28 +286,3 @@ class TestStateMachineDeclaration(unittest.TestCase):
             @transition(target_state=PlainState)
             def move(self):
                 pass
-
-
-class TestTransitionEquivalence(unittest.TestCase):
-
-    def test_subclasses(self):
-
-        class Parent(State):
-            pass
-
-        class Super(State):
-
-            @transition(target_state=Parent)
-            def move(self):
-                pass
-
-        class ChildOne(Super):
-            pass
-
-        class ChildTwo(Super):
-            pass
-
-        self.assertFalse(_equivalent(ChildOne.move, ChildTwo.move))
-
-    def test_missing_transitions(self):
-        self.assertFalse(_equivalent(None, None))
