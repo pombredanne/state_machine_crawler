@@ -182,8 +182,6 @@ class StateMachineCrawler(object):
         for item in dropset:
             self._state_graph.pop(item)
 
-        self._state_name_map = dict([(state.full_name, state) for state in self._state_graph])
-
         for source_state, target_states in self._state_graph.iteritems():
             target_states.add(self.EntryPoint)
 
@@ -267,8 +265,8 @@ class StateMachineCrawler(object):
 
     def _existing_state(self, name):
         found = []
-        for state_name, state in self._state_name_map.iteritems():
-            if name in state_name:
+        for state in self._state_graph:
+            if name in state.full_name:
                 found.append(state)
         if not found:
             raise NonExistentStateError("State '{0}' was not registered.".format(name))
@@ -423,6 +421,20 @@ class StateMachineCrawler(object):
         """
         self.register_collection(StateCollection.from_module(module))
 
+    def _create_transition_dict(self, source, target, transition):
+        failed = (source, target) in self._error_transitions or source in self._error_states or \
+            target in self._error_states
+        return {
+            "_entry": transition,
+            "current": self._current_state is source and self._next_state is target,
+            "name": transition.original.__name__,
+            "target": target.full_name,
+            "source": source.full_name,
+            "cost": transition.cost,
+            "visited": (source, target) in self._visited_transitions,
+            "failed": failed
+        }
+
     def as_graph(self, include_entry_point=False):
         """
         Returns a full graph representation of the state machine as a dict
@@ -445,29 +457,14 @@ class StateMachineCrawler(object):
                 "transitions": {}
             }
 
-        transition_map = _create_transition_map(self._registered_states)
+        for (source, target), transition in _create_transition_map(self._registered_states).iteritems():
+            states[source.full_name]["transitions"][target.full_name] = \
+                self._create_transition_dict(source, target, transition)
 
-        for source_state, target_states in self._state_graph.iteritems():
-            if source_state is self.EntryPoint:
-                continue
-            transition_map[source_state, self.EntryPoint] = self.EntryPoint._create_transition(source_state)
-
-        for (source, target), transition in transition_map.iteritems():
-            if target is self.EntryPoint and not include_entry_point:
-                continue
-
-            failed = (source, target) in self._error_transitions or source in self._error_states or \
-                target in self._error_states
-
-            states[source.full_name]["transitions"][target.full_name] = {
-                "_entry": transition,
-                "current": self._current_state is source and self._next_state is target,
-                "name": transition.original.__name__,
-                "target": target.full_name,
-                "source": source.full_name,
-                "cost": transition.cost,
-                "visited": (source, target) in self._visited_transitions,
-                "failed": failed
-            }
+        if include_entry_point:
+            for state_info in states.itervalues():
+                source = state_info["_entry"]
+                state_info["transitions"][self.EntryPoint.full_name] = \
+                    self._create_transition_dict(source, self.EntryPoint, self.EntryPoint._create_transition(source))
 
         return states
