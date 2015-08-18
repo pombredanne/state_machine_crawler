@@ -143,6 +143,17 @@ class StateMachineCrawler(object):
 
     class EntryPoint(State):
 
+        @classmethod
+        def _create_transition(cls, source_state):
+            def tempo(ep_instance):
+                pass
+            tempo.cost = 0
+            tempo.target_state = cls
+            tempo.source_state = source_state
+            tempo.im_class = source_state
+            tempo.original = tempo
+            return tempo
+
         def verify(self):
             return True
 
@@ -172,6 +183,9 @@ class StateMachineCrawler(object):
             self._state_graph.pop(item)
 
         self._state_name_map = dict([(state.full_name, state) for state in self._state_graph])
+
+        for source_state, target_states in self._state_graph.iteritems():
+            target_states.add(self.EntryPoint)
 
         self._state_graph[self.EntryPoint] = {self._initial_state}
 
@@ -434,15 +448,9 @@ class StateMachineCrawler(object):
         transition_map = _create_transition_map(self._registered_states)
 
         for source_state, target_states in self._state_graph.iteritems():
-            def tempo(ep_instance):
-                pass
-            tempo.cost = 0
-            tempo.target_state = self.EntryPoint
-            tempo.source_state = source_state
-            tempo.im_class = source_state
-            tempo.original = tempo
-            target_states.add(self.EntryPoint)
-            transition_map[source_state, self.EntryPoint] = tempo
+            if source_state is self.EntryPoint:
+                continue
+            transition_map[source_state, self.EntryPoint] = self.EntryPoint._create_transition(source_state)
 
         for (source, target), transition in transition_map.iteritems():
             if target is self.EntryPoint and not include_entry_point:
