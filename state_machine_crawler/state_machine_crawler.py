@@ -203,7 +203,7 @@ class StateMachineCrawler(object):
         return self._current_state
 
     def _err(self, target_state, msg):
-        text = "Move from state %r to state %r has failed: %s." % (self._current_state, target_state, msg)
+        text = "Move from state %s to state %s has failed: %s." % (self._current_state, target_state, msg)
         text += "\nHistory: \n%s\n" % " -> ".join([hist.full_name for hist in self._history])
         raise TransitionError(text)
 
