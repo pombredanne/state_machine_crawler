@@ -1,6 +1,7 @@
-8.4 2015-08-31
+8.5 2015-08-31
 
-    * code simplification
+    * got rid of non ASCII chars in the log
+    * fixed debug state string
 
 8.3 2015-08-18
 
