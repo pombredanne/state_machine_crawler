@@ -1,159 +1,131 @@
 8.4 2015-08-31
 
-    [Anton Berezin <gurunars@gmail.com>]
-        * code simplification
+    * code simplification
 
 8.3 2015-08-18
 
-    [Anton Berezin <gurunars@gmail.com>]
-        * MINOR: code simplification
+    * code simplification
 
 8.2 2015-08-14
 
-    [Anton Berezin <gurunars@gmail.com>]
-        * MINOR: passing context through a layer
+    * passing context through a layer
 
 8.1 2015-08-13
 
-    [Anton Berezin <gurunars@gmail.com>]
-        * MINOR: introduced a StateCollection
+    * introduced a StateCollection
 
 8.0 2015-08-10
 
-    [Anton Berezin <gurunars@gmail.com>]
-        * MAJOR: got rid of class wide context aware state registries - now all states/modules must be registered
-                 explicitly
-        * MINOR: disabled unicode symbols for Windows
+    * MAJOR: got rid of class wide context aware state registries - now all states/modules must be registered
+      explicitly
+    * disabled unicode symbols for Windows
 
 7.5 2015-07-25
 
-    [Anton Berezin <gurunars@gmail.com>]
-        * MINOR: fixed packaging to work with Windows
+    * fixed packaging to work with Windows
 
 7.4 2015-05-21
 
-    [Anton Berezin <gurunars@gmail.com>]
-        * MINOR: fixed a bug with atexit call
+    * fixed a bug with atexit call
 
 7.3.0 2015-05-08
 
-    [Anton Berezin <gurunars@gmail.com>]
-        * Exit with status code 1 on error in CLI mode
+    * Exit with status code 1 on error in CLI mode
 
 7.2.1 2015-05-07
 
-    [Anton Berezin <gurunars@gmail.com>]
-        * Fixed multiple minor bugs
+    * Fixed multiple minor bugs
 
 7.2.0 2015-05-04
 
-    [Anton Berezin <gurunars@gmail.com>]
-        * MINOR: added an autodiscoverable CLI
+    * added an autodiscoverable CLI
 
 7.1.1 2015-05-04
 
-    [Anton Berezin <gurunars@gmail.com>]
-        * MINOR: fixed webview - reuse the port
+    * fixed webview - reuse the port
 
 7.1.0 2015-04-30
 
-    [Anton Berezin <gurunars@gmail.com>]
-        * MINOR: changed highlighting of the webview to a more reasonable one
+    * changed highlighting of the webview to a more reasonable one
 
 7.0.0 2015-04-14
 
-    [Anton Berezin <gurunars@gmail.com>]
-        * MAJOR: stoped returning a boolean via a 'verify' method
-        * MINOR: beautiful traceback handling
+    * MAJOR: stoped returning a boolean via a 'verify' method
+    * beautiful traceback handling
 
 6.1.0 2015-03-10
 
-    [Anton Berezin <gurunars@gmail.com>]
-        * MINOR: added multiple command line arguments
-        * MINOR: logging beautification
+    * added multiple command line arguments
+    * logging beautification
 
 6.0.2 2015-02-23
 
-    [Anton Berezin <gurunars@gmail.com>]
-        * PATCH: fixed packaging
+    * PATCH: fixed packaging
 
 6.0.1 2015-02-18
 
-    [Anton Berezin <gurunars@gmail.com>]
-        * MINOR: fixed a bug with equivalence for current transitions
-        * MINOR: move to entry point after done
-        * MINOR: got rid of _entry_point
+    * fixed a bug with equivalence for current transitions
+    * move to entry point after done
+    * got rid of _entry_point
 
 6.0.0 2015-02-17
 
-    [Anton Berezin <gurunars@gmail.com>]
-        * PATCH: handle only exception subclasses - syntax or runtime errors shall not be caught
-        * MINOR: do not let start/stop the web view once it was already initiated
-        * PATCH: cli
-        * MAJOR: transition is a decorator for a method not a class from now on
+    * PATCH: handle only exception subclasses - syntax or runtime errors shall not be caught
+    * do not let start/stop the web view once it was already initiated
+    * PATCH: cli
+    * MAJOR: transition is a decorator for a method not a class from now on
 
 5.0.1 2015-02-09
 
-    [Anton Berezin <gurunars@gmail.com>]
-        * PATCH: fixed inheritance issues
+    * PATCH: fixed inheritance issues
 
 5.0.0 2015-02-09
 
-    [Anton Berezin <gurunars@gmail.com>]
-        * MAJOR: use random available port for running a web service
-        * MINOR: automatic state graph traversal
-        * MINOR: webview butification
-        * MINOR: use pydot2 to produce svgs from dot graphs
-        * MINOR: option to say which states to visit
-        * MINOR: clear() method for the state machine
+    * MAJOR: use random available port for running a web service
+    * automatic state graph traversal
+    * webview butification
+    * use pydot2 to produce svgs from dot graphs
+    * option to say which states to visit
+    * clear() method for the state machine
 
 4.0.0 2015-01-26
 
-    [Anton Berezin <gurunars@gmail.com>]
-        * MINOR: added a webview
-        * MAJOR: got rid of TK based graphviewer
-        * MINOR: logging
-        * MINOR: added entry point
-        * MINOR: stopped modifying the classes themselves
-        * MAJOR: got rid of "create" method
+    * added a webview
+    * MAJOR: got rid of TK based graphviewer
+    * logging
+    * added entry point
+    * stopped modifying the classes themselves
+    * MAJOR: got rid of "create" method
 
 3.2.0 2015-01-13
 
-    [Anton Berezin <gurunars@gmail.com>]
-        * MINOR: Added graph visualization
+    * Added graph visualization
 
 3.1.0 2014-12-01
 
-    [Anton Berezin <gurunars@gmail.com>]
-        * MINOR: added creation of the crawler with state auto determinition
+    * added creation of the crawler with state auto determinition
 
 3.0.0 2014-12-01
 
-    [Anton Berezin <gurunars@gmail.com>]
-        * MAJOR: got rid of initial and error transitions
+    * MAJOR: got rid of initial and error transitions
 
 2.1.0 2014-11-25
 
-    [Anton Berezin <gurunars@gmail.com>]
-        * MINOR: made it possible to transition to the same state
+    * made it possible to transition to the same state
 
 2.0.0 2014-11-24
 
-    [Anton Berezin <gurunars@gmail.com>]
-        * MAJOR: refactored and documented the API
+    * MAJOR: refactored and documented the API
 
 1.0.3 2014-11-24
 
-    [Anton Berezin <gurunars@gmail.com>]
-        * Version bump to enable Travis CI build
+    * Version bump to enable Travis CI build
 
 1.0.1 2014-11-21
 
-    [Anton Berezin <gurunars@gmail.com>]
-        * PATCH: Added one extra test and fixed a bug with not being to do a transition through the initial state
-        * PATCH: wrote a new unit test and fixed a bug with transitioning to unknown state
+    * PATCH: Added one extra test and fixed a bug with not being to do a transition through the initial state
+    * PATCH: wrote a new unit test and fixed a bug with transitioning to unknown state
 
 1.0.0 2014-11-12
 
-    [Anton Berezin <gurunars@gmail.com>]
-        * Initial release
+    * Initial release

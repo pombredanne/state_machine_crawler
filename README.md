@@ -15,22 +15,20 @@ Run [pep8](https://pypi.python.org/pypi/pep8) and [pyflakes](https://pypi.python
 ```
 MAJOR.MINOR RELEASE-TIMESTAMP=YYYY-MM-DD
 
-    [Author Name <author@email>]
-        * CHANGE_TYPE=MAJOR|MINOR: change description
+    * change description
+    * MAJOR: another change
 ```
 
-**MAJOR**: backward incompatible change
-**MINOR**: backward compatible change
+Mark backward incompatible changes as **MAJOR**. Other changes do no need to be marked anyhow.
 
 Example
 
 ```
 12.11 2014-01-12
 
-    [John Smith <john.smith@example.com>]
-        * MINOR: refactored the modules
-        * MINOR: added a new class
-        * MAJOR: removed deprecated function
+    * refactored the modules
+    * added a new class
+    * removed deprecated function
 ```
 
 Notes:
